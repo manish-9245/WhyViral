@@ -1,63 +1,92 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Archive, Clock, Eye } from "lucide-react";
+import { Archive, ExternalLink, Settings } from "lucide-react";
 
-type Run = { file:string; platform:string; keyword:string; videos:number; date:string; mtime:string; rankBy:string };
+type Run = { file: string; platform: string; keyword: string; videos: number; date: string; rankBy: string };
 
 export default function HistoryPage() {
-  const [runs, setRuns] = useState<Run[] | null>(null);
+  const [runs, setRuns] = useState<Run[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch("/api/history").then(r=>r.json()).then(j=>{ setRuns(j.runs || []); setLoading(false); }).catch(()=>{ setRuns([]); setLoading(false); });
+    fetch("/api/history")
+      .then((r) => r.json())
+      .then((j) => { setRuns(j.runs || []); setLoading(false); })
+      .catch(() => { setRuns([]); setLoading(false); });
   }, []);
 
-  if (loading) return <div className="font-mono text-[13px] text-stone p-8">Loading history…</div>;
-
   return (
-    <div className="space-y-6">
-      <div className="rounded-[12px] border border-line bg-white overflow-hidden">
-        <div className="h-9 flex items-center px-6 bg-ink text-paper font-mono text-[10px] tracking-[0.12em]">ARCHIVE — RUN HISTORY · {runs?.length || 0} WALLS</div>
-        <div className="p-6">
-          <h1 className="font-display text-[28px] font-bold tracking-[-0.03em]" style={{fontFamily:"var(--font-sora)"}}>History</h1>
-          <p className="mt-1 font-mono text-[12px] text-stone">Every run is a wall in <span className="text-ink font-medium">output/report-*.json</span> — local, private, file-based.</p>
-          {!runs || runs.length===0 ? (
-            <div className="mt-6 rounded-[12px] border border-dashed border-line bg-paper p-8 text-center">
-              <Archive className="h-6 w-6 mx-auto text-stone" />
-              <div className="mt-2 font-mono text-[13px] font-medium">No walls yet</div>
-              <div className="mt-1 font-mono text-[11px] text-stone">Run from the bench — <Link href="/" className="text-ink underline">Go to console</Link></div>
-            </div>
-          ) : (
-            <div className="mt-6 grid gap-3">
-              {runs.map(r=> (
-                <div key={r.file} className="flex items-center gap-4 rounded-[12px] border border-line bg-white p-4 hover:border-ink/15 hover:shadow-evidence transition-all">
-                  <div className="h-10 w-10 rounded-[8px] bg-ink text-paper grid place-items-center font-mono text-[11px] font-bold">{r.platform.slice(0,2).toUpperCase()}</div>
-                  <div className="min-w-0 flex-1">
-                    <div className="font-display text-[14px] font-semibold leading-4 truncate" style={{fontFamily:"var(--font-sora)"}}>{r.keyword}</div>
-                    <div className="mt-1 flex items-center gap-2 font-mono text-[11px] text-stone">
-                      <span className="inline-flex items-center gap-1"><Clock className="h-3 w-3" /> {r.date}</span>
-                      <span>·</span>
-                      <span className="inline-flex items-center gap-1"><Eye className="h-3 w-3" /> {r.videos} tapes</span>
-                      <span className="hidden sm:inline">· {r.rankBy}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 shrink-0">
-                    <Link href={`/report/${r.platform}`} className="h-8 px-3 inline-flex items-center rounded-full bg-ink text-paper font-mono text-[11px] font-medium">Open</Link>
-                    <a href={`/api/export?platform=${r.platform}&format=csv`} className="hidden sm:inline-flex h-8 px-3 items-center rounded-full border border-line bg-white font-mono text-[11px]">CSV</a>
-                  </div>
+    <div className="min-h-screen bg-[#f8f7f4]">
+      {/* Nav */}
+      <header className="sticky top-0 z-40 bg-white border-b border-stone/10 shadow-sm">
+        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-ink grid place-items-center text-amber text-[10px] font-bold font-mono">WV</div>
+            <span className="font-mono text-[11px] font-semibold tracking-[0.1em] text-ink hidden sm:block">WHYVIRAL</span>
+          </div>
+          <nav className="flex items-center gap-1">
+            <Link href="/" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50 transition-colors">Console</Link>
+            <Link href="/history" className="h-8 px-3 flex items-center rounded-lg bg-stone-100 font-mono text-[11px]">History</Link>
+            <Link href="/settings" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50 transition-colors">
+              <Settings className="h-3.5 w-3.5" />
+            </Link>
+          </nav>
+        </div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-6 py-8">
+        <div className="flex items-end justify-between mb-6">
+          <div>
+            <h1 className="font-display text-[28px] font-bold tracking-[-0.03em] text-ink">History</h1>
+            <p className="font-mono text-[12px] text-stone/60 mt-1">{runs.length} wall{runs.length !== 1 ? "s" : ""} · local only</p>
+          </div>
+          <Link href="/" className="h-9 px-4 rounded-lg bg-amber text-ink font-mono text-[11px] font-semibold flex items-center gap-2 hover:bg-amber/90 transition-colors">
+            <Archive className="h-3.5 w-3.5" /> New run
+          </Link>
+        </div>
+
+        {loading ? (
+          <div className="space-y-3">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-20 rounded-xl bg-white border border-stone/10 animate-pulse" />
+            ))}
+          </div>
+        ) : runs.length === 0 ? (
+          <div className="rounded-xl border-2 border-dashed border-stone/20 bg-white p-16 text-center">
+            <Archive className="h-10 w-10 mx-auto text-stone/20" />
+            <p className="mt-3 font-mono text-[13px] text-stone/60">No walls yet.</p>
+            <p className="mt-1 font-mono text-[11px] text-stone/40">Run a search from the console to see walls here.</p>
+            <Link href="/" className="mt-4 inline-flex h-9 px-5 rounded-lg bg-ink text-white font-mono text-[11px] font-medium items-center gap-2 hover:bg-ink/90 transition-colors">
+              Go to console →
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-2">
+            {runs.map((r) => (
+              <Link key={r.file} href={`/report/${r.platform}`}
+                className="flex items-center gap-4 rounded-xl border border-stone/10 bg-white px-5 py-4 hover:border-stone/20 hover:shadow-sm transition-all group">
+                <div className="h-11 w-11 rounded-xl bg-ink text-amber grid place-items-center font-mono text-[12px] font-bold shrink-0">
+                  {r.platform.slice(0, 2).toUpperCase()}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-        <div className="px-6 py-3 bg-secondary/50 border-t border-line flex items-center justify-between font-mono text-[11px] text-stone">
-          <span>Local only — no cloud. Files in <span className="text-ink">output/</span></span>
-          <span className="hidden sm:inline">© Manish Tiwari</span>
-        </div>
-      </div>
-      <div className="rounded-[12px] border border-line bg-paper p-4 font-mono text-[11px] leading-5 text-stone">
-        <span className="font-medium text-ink">Tip:</span> Compare walls — open two reports and diff the <span className="text-ink">Formats</span> + <span className="text-ink">Hooks</span> tables.
+                <div className="flex-1 min-w-0">
+                  <div className="font-mono text-[13px] font-semibold text-ink truncate">{r.keyword}</div>
+                  <div className="font-mono text-[11px] text-stone/50 mt-0.5">{r.videos} tapes · {r.date}</div>
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span className="font-mono text-[10px] text-stone/40 border border-stone/10 rounded px-2 py-1 capitalize">{r.platform}</span>
+                  <ExternalLink className="h-4 w-4 text-stone/30 group-hover:text-amber-600 transition-colors" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {runs.length > 0 && (
+          <div className="mt-6 font-mono text-[11px] text-stone/40 text-center">
+            Files live in <span className="text-stone/60">output/report-*.json</span> · private, local, no cloud
+          </div>
+        )}
       </div>
     </div>
   );

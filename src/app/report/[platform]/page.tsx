@@ -3,7 +3,7 @@ import { ReportHeader } from "@/components/report/ReportHeader";
 import { ReportClient } from "@/components/report/ReportClient";
 import type { ArchiveReport } from "@/lib/types";
 import Link from "next/link";
-import { AlertTriangle, ArrowLeft, FileJson, FileText } from "lucide-react";
+import { ArrowLeft, FileJson, Settings } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -16,11 +16,17 @@ function loadReport(platform: string): ArchiveReport | null {
   if (existsSync(vpath)) {
     try {
       const v = JSON.parse(readFileSync(vpath, "utf8"));
-      const patPath = `output/patterns-${platform}.json`;
-      const patterns = existsSync(patPath) ? JSON.parse(readFileSync(patPath, "utf8")) : null;
       const cache = existsSync("output/analyses.json") ? JSON.parse(readFileSync("output/analyses.json", "utf8")) : {};
       const analyses = (v.videos || []).map((vid: { id: string }) => cache[vid.id] || null);
-      return { keyword: v.keyword || v.keywords?.join(", ") || platform, platform: platform as never, videos: v.videos || v.pool || [], analyses, patterns, adaptable: [], meta: { rankBy: v.rankBy || "engagement", date: new Date().toISOString().slice(0,10), platform: platform as never } };
+      return {
+        keyword: v.keyword || v.keywords?.join(", ") || platform,
+        platform: platform as never,
+        videos: v.videos || v.pool || [],
+        analyses,
+        patterns: null,
+        adaptable: [],
+        meta: { rankBy: v.rankBy || "engagement", date: new Date().toISOString().slice(0, 10), platform: platform as never },
+      };
     } catch {}
   }
   return null;
@@ -28,28 +34,41 @@ function loadReport(platform: string): ArchiveReport | null {
 
 export default async function ReportPage({ params }: { params: Promise<{ platform: string }> }) {
   const { platform } = await params;
-  const allowed = ["tiktok","instagram","meta"];
-  if (!allowed.includes(platform)) return <div className="py-12 text-center font-mono text-[13px]">Unknown platform “{platform}” — use tiktok, instagram, or meta.</div>;
+  const allowed = ["tiktok", "instagram", "meta"];
+  if (!allowed.includes(platform)) return (
+    <div className="min-h-screen bg-[#f8f7f4] flex items-center justify-center">
+      <div className="text-center font-mono text-[13px] text-stone">Unknown platform "{platform}" — use tiktok, instagram, or meta.</div>
+    </div>
+  );
 
   const report = loadReport(platform);
 
   if (!report) {
     return (
-      <div className="space-y-6">
-        <div className="rounded-[12px] border border-line bg-white overflow-hidden">
-          <div className="h-9 flex items-center px-6 bg-ink text-paper font-mono text-[10px] tracking-[0.12em]">EVIDENCE ARCHIVE — {platform.toUpperCase()} · NO TAPES</div>
-          <div className="p-8 text-center">
-            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1 font-mono text-[11px] tracking-[0.08em]">LAB No. 002 · Manish Tiwari</div>
-            <h1 className="mt-4 font-display text-[28px] font-bold tracking-[-0.03em] capitalize" style={{fontFamily:"var(--font-sora)"}}>{platform} wall — empty</h1>
-            <p className="mt-2 font-mono text-[12px] text-stone">No report found. Run from the bench.</p>
+      <div className="min-h-screen bg-[#f8f7f4]">
+        {/* Nav */}
+        <header className="bg-white border-b border-stone/10 shadow-sm">
+          <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-ink grid place-items-center text-amber text-[10px] font-bold font-mono">WV</div>
+              <span className="font-mono text-[11px] font-semibold tracking-[0.1em] text-ink">WHYVIRAL</span>
+            </div>
+            <nav className="flex items-center gap-1">
+              <Link href="/" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50">Console</Link>
+              <Link href="/history" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50">History</Link>
+              <Link href="/settings" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50"><Settings className="h-3.5 w-3.5" /></Link>
+            </nav>
           </div>
-        </div>
-        <div className="rounded-[12px] border border-amber/20 bg-amber/[0.08] p-4 flex items-start gap-3">
-          <AlertTriangle className="h-4 w-4 text-amber shrink-0 mt-0.5" />
-          <span className="font-mono text-[12px] leading-5">No <span className="font-medium text-ink">output/report-{platform}.json</span> found. Run from the bench or via <span className="font-mono bg-white border border-line px-1.5 py-0.5 rounded">npm run all</span></span>
-        </div>
-        <div className="flex justify-center gap-2">
-          <Link href="/" className="inline-flex h-10 items-center gap-1.5 rounded-[8px] bg-ink text-paper px-4 font-mono text-[12px] font-medium">← Back to bench</Link>
+        </header>
+        <div className="max-w-4xl mx-auto px-6 py-16 text-center">
+          <div className="h-16 w-16 rounded-2xl bg-stone-100 mx-auto mb-4 grid place-items-center font-mono text-[11px] text-stone/40 font-bold">
+            {platform.slice(0, 2).toUpperCase()}
+          </div>
+          <h1 className="font-display text-[24px] font-bold tracking-[-0.03em] text-ink capitalize">{platform} wall — empty</h1>
+          <p className="mt-2 font-mono text-[12px] text-stone/60">No report found for this platform. Run a search from the console.</p>
+          <Link href="/" className="mt-6 inline-flex h-10 items-center gap-2 rounded-lg bg-amber text-ink font-mono text-[12px] font-semibold px-5 hover:bg-amber/90 transition-colors">
+            ← Go to console
+          </Link>
         </div>
       </div>
     );
@@ -57,29 +76,49 @@ export default async function ReportPage({ params }: { params: Promise<{ platfor
 
   const videoMap: Record<string, { url: string; metric: string }> = {};
   report.videos.forEach((v, i) => {
-    const metric = v.platform === "meta" ? `${v.daysRunning} days` : `${v.views} views`;
-    videoMap[`V${i+1}`] = { url: v.url, metric: `@${v.author} · ${metric}` };
+    const metric = v.platform === "meta" ? `${v.daysRunning} days` : `${v.views.toLocaleString()} views`;
+    videoMap[`V${i + 1}`] = { url: v.url, metric: `@${v.author} · ${metric}` };
   });
-  const hasHtmlFallback = existsSync(`output/report-${platform}.html`);
 
   return (
-    <div className="space-y-8">
-      <ReportHeader report={report} />
-
-      <div className="flex flex-wrap items-center gap-2">
-        <Link href="/" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-line bg-white px-3 font-mono text-[11px] font-medium hover:bg-paper"><ArrowLeft className="h-3 w-3" /> Bench</Link>
-        {hasHtmlFallback && <a href={`/output/report-${platform}.html`} target="_blank" className="inline-flex h-8 items-center gap-1.5 rounded-full border border-line bg-white px-3 font-mono text-[11px]">Legacy HTML <FileText className="h-3 w-3" /></a>}
-        <a href={`/output/report-${platform}.json`} target="_blank" className="inline-flex h-8 items-center gap-1.5 rounded-full bg-ink text-paper px-3 font-mono text-[11px] font-medium">Raw JSON <FileJson className="h-3 w-3" /></a>
-        <span className="ml-auto hidden sm:inline-flex items-center gap-1.5 font-mono text-[11px] text-stone">© Manish Tiwari — every pin is a timestamped source</span>
-      </div>
-
-      <ReportClient report={report} videoMap={videoMap} />
-
-      <div className="rounded-[12px] border border-line bg-paper p-4 flex flex-col md:flex-row items-center justify-between gap-3">
-        <div className="font-mono text-[11px] leading-4 text-stone">
-          Platform <span className="font-medium text-ink">{platform}</span> · {report.videos.length} winners · {report.patterns ? "wall complete" : "needs 5+"} · <span className="hidden sm:inline">data </span><span className="font-mono bg-white border border-line px-1.5 py-0.5 rounded">output/report-{platform}.json</span>
+    <div className="min-h-screen bg-[#f8f7f4]">
+      {/* Nav */}
+      <header className="sticky top-0 z-40 bg-white border-b border-stone/10 shadow-sm">
+        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-8 w-8 rounded-lg bg-ink grid place-items-center text-amber text-[10px] font-bold font-mono">WV</div>
+            <span className="font-mono text-[11px] font-semibold tracking-[0.1em] text-ink">WHYVIRAL</span>
+            <span className="font-mono text-[11px] text-stone/40 hidden sm:block">/</span>
+            <span className="font-mono text-[11px] text-stone/60 capitalize hidden sm:block">{platform}</span>
+          </div>
+          <nav className="flex items-center gap-1">
+            <Link href="/" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50">Console</Link>
+            <Link href="/history" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50">History</Link>
+            <Link href="/settings" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50"><Settings className="h-3.5 w-3.5" /></Link>
+          </nav>
         </div>
-        <div className="font-mono text-[11px] tracking-[0.06em]">Built by <span className="font-semibold text-ink">Manish Tiwari</span> — for strategists, with proof</div>
+      </header>
+
+      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+        {/* Actions */}
+        <div className="flex items-center gap-2">
+          <Link href="/" className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-stone/20 bg-white px-3 font-mono text-[11px] text-stone hover:bg-stone-50 transition-colors">
+            <ArrowLeft className="h-3 w-3" /> Console
+          </Link>
+          <a href={`/output/report-${platform}.json`} target="_blank"
+            className="inline-flex h-8 items-center gap-1.5 rounded-lg bg-ink text-white px-3 font-mono text-[11px] font-medium hover:bg-ink/90 transition-colors">
+            Raw JSON <FileJson className="h-3 w-3" />
+          </a>
+          <span className="ml-auto font-mono text-[11px] text-stone/40">© Manish Tiwari</span>
+        </div>
+
+        <ReportHeader report={report} />
+
+        <ReportClient report={report} videoMap={videoMap} />
+
+        <div className="rounded-xl border border-stone/10 bg-white px-5 py-4 font-mono text-[11px] text-stone/60 text-center">
+          {report.videos.length} winners · data lives in <span className="text-stone/80">output/report-{platform}.json</span> · private &amp; local
+        </div>
       </div>
     </div>
   );
