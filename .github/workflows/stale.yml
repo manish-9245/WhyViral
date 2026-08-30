@@ -1,0 +1,29 @@
+name: Stale issues
+
+on:
+  schedule:
+    - cron: "0 3 * * 1"
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  close-stale:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          days-before-stale: 30
+          days-before-close: 7
+          stale-issue-message: |
+            👋  No activity in 30 days. If this is still relevant, drop a one-liner
+            and I'll keep it open. Otherwise it will auto-close in 7 days.
+          stale-pr-message: |
+            👋  No activity in 30 days. If the PR is still in flight, push a commit
+            and I'll re-check.
+          close-issue-message: "Closed for inactivity. Reopen any time with `/reopen`."
+          close-pr-message: "Closed for inactivity. Reopen any time with `/reopen`."
+          exempt-issue-labels: "pinned, security, in-progress"
+          exempt-pr-labels: "pinned, security, in-progress"

@@ -1,0 +1,24 @@
+version: 1
+
+"src/app/api/**":
+  - "api"
+  - "backend"
+
+"src/mastra/**":
+  - "pipeline"
+  - "backend"
+
+"src/app/**":
+  - "frontend"
+
+"docs/**":
+  - "docs"
+
+"*.md":
+  - "docs"
+
+".github/**":
+  - "ci"
+
+"package.json":
+  - "deps"

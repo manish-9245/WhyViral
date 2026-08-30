@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Manish Tiwari — buildwithmanish.com
+    url: https://buildwithmanish.com
+    about: Personal site, talks, and other projects.
+  - name: GitHub Discussions
+    url: https://github.com/manish-9245/WhyViral/discussions
+    about: For longer-form questions, ideas, and show-and-tell.
+  - name: Apify docs
+    url: https://docs.apify.com
+    about: Source of the video metadata (TikTok / Instagram / Meta actors).
+  - name: Gemini API docs
+    url: https://ai.google.dev/gemini-api/docs
+    about: Source of the video-watching model.

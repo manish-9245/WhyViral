@@ -1,0 +1,11 @@
+# CODEOWNERS
+# Each line is a file pattern followed by one or more owners.
+# Owners are auto-requested as reviewers for any PR touching these files.
+
+*       @manish-9245
+
+/src/mastra/   @manish-9245
+/src/app/api/  @manish-9245
+/.github/      @manish-9245
+/package.json  @manish-9245
+/next.config.* @manish-9245

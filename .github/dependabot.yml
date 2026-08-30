@@ -1,0 +1,31 @@
+version: 2
+
+update-pulls: 5
+
+groups:
+  - name: Dependencies
+    applies-to: version-updates
+    rules:
+      - package-ecosystem: "npm"
+        directory: "/"
+        schedule: { interval: "weekly" }
+        labels: ["deps"]
+        commit-message:
+          prefix: "chore"
+          include: "scope"
+        ignore:
+          - dependency-name: "next"
+            versions: ["16.x", "17.x"]
+          - dependency-name: "react"
+            versions: ["20.x"]
+
+  - name: GitHub Actions
+    applies-to: version-updates
+    rules:
+      - package-ecosystem: "github-actions"
+        directory: "/"
+        schedule: { interval: "weekly" }
+        labels: ["ci"]
+        commit-message:
+          prefix: "ci"
+          include: "scope"

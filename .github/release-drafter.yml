@@ -1,0 +1,26 @@
+tag-template: "v$RESOLVED_VERSION"
+version-resolver:
+  major:
+    labels: ["breaking"]
+  minor:
+    labels: ["enhancement", "feat"]
+  patch:
+    labels: ["bug", "fix", "docs", "chore", "deps", "ci"]
+  default: patch
+categories:
+  - title: 🚀 Features
+    labels: ["enhancement", "feat"]
+  - title: 🐛 Bug Fixes
+    labels: ["bug", "fix"]
+  - title: 🧰 Maintenance
+    labels: ["chore", "deps", "ci", "refactor"]
+  - title: 📝 Docs
+    labels: ["docs"]
+exclude-labels: ["duplicate", "wontfix", "invalid"]
+change-template: "- $TITLE (#$NUMBER) @$AUTHOR"
+template: |
+  ## Changes
+
+  $CHANGES
+
+  **Full Changelog**: https://github.com/$OWNER/$REPOSITORY/compare/$PREVIOUS_TAG...v$RESOLVED_VERSION

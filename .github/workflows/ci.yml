@@ -6,32 +6,24 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
   build:
+    name: typecheck · lint · build
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
-
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
-          cache: "npm"
-
+          node-version: "22"
+          cache: npm
       - run: npm ci
-
-      - name: Ensure required directories exist
-        run: |
-          mkdir -p output
-          [ -f output/analyses.json ] || echo '{}' > output/analyses.json
-
-      - name: Typecheck
-        run: npm run typecheck
-
-      - name: Lint
-        run: npx --no-install next lint --dir src || echo "lint warnings allowed"
-
-      - name: Build
-        run: npm run build
+      - run: npm run typecheck
+      - run: npx --no-install next lint --dir src
+      - run: npm run build
         env:
-          APIFY_TOKEN: ""
-          GEMINI_API_KEY: ""
+          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN || 'ci-stub' }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'ci-stub' }}
