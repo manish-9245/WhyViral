@@ -192,15 +192,15 @@ export async function POST(req: NextRequest) {
   const runStage: Stage | null = STAGES.includes(body.stage as Stage) ? (body.stage as Stage) : null;
   const platforms = platformFlag === "all" ? ["tiktok","instagram","meta"] as const : [platformFlag as "tiktok"|"instagram"|"meta"];
 
-  const rankBy = process.env.RANK_BY || "engagement";
-  const viewFloor = Number(process.env.VIEW_FLOOR) || 100_000;
+  const rankBy = String(body.rankBy || process.env.RANK_BY || "engagement");
+  const viewFloor = Number(body.viewFloor || process.env.VIEW_FLOOR || 100_000);
   const minLikes = Number(process.env.MIN_LIKES) || 0;
-  const language = process.env.LANGUAGE || "en";
-  const country = process.env.COUNTRY || "US";
+  const language = String(body.language || process.env.LANGUAGE || "en");
+  const country = String(body.country || process.env.COUNTRY || "US");
   const nicheFilter = (process.env.NICHE_FILTER || "strict").toLowerCase();
   const model = process.env.GEMINI_MODEL || "gemini-3.5-flash";
   const ai = makeClient();
-  const deepCount = process.env.DEEP_COUNT !== undefined ? Number(process.env.DEEP_COUNT) : 8;
+  const deepCount = Number(body.deepCount ?? process.env.DEEP_COUNT ?? 8);
   const metaDaysFloor = Number(process.env.META_DAYS_FLOOR) || 30;
   const minSynth = Number(process.env.SYNTH_MIN) || 5;
   const adaptableFloor = Number(process.env.ADAPTABLE_VIEW_FLOOR) || viewFloor;

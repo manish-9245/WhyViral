@@ -50,6 +50,12 @@ export default function HomePage() {
   const [keyword, setKeyword] = useState("");
   const [platform, setPlatform] = useState<"tiktok" | "instagram" | "meta" | "all">("tiktok");
   const [count, setCount] = useState(5);
+  const [viewFloor, setViewFloor] = useState(100000);
+  const [rankBy, setRankBy] = useState<"engagement" | "reach" | "views">("engagement");
+  const [language, setLanguage] = useState<"en" | "id" | "any">("en");
+  const [country, setCountry] = useState<"US" | "GB" | "AU" | "IN" | "CA" | "ALL">("US");
+  const [deepCount, setDeepCount] = useState(8);
+  const [advancedOpen, setAdvancedOpen] = useState(false);
   const [running, setRunning] = useState(false);
   const [runStage, setRunStage] = useState<Stage | null>(null);
   const [logOpen, setLogOpen] = useState(true);
@@ -98,7 +104,10 @@ export default function HomePage() {
     setWarns([]);
     setRunStage(opts?.stage || null);
     setLogOpen(true);
-    const body: Record<string, unknown> = { keywords: keyword.split(",").map((s) => s.trim()).filter(Boolean), platform, count };
+    const body: Record<string, unknown> = {
+      keywords: keyword.split(",").map((s) => s.trim()).filter(Boolean),
+      platform, count, viewFloor, rankBy, language, country, deepCount,
+    };
     if (opts?.resume) body.resume = true;
     if (opts?.stage) body.stage = opts.stage;
     if (opts?.clearState) body.clearState = true;
@@ -221,6 +230,84 @@ export default function HomePage() {
                 {running ? "Running…" : "Run"}
               </button>
             </div>
+          </div>
+
+          {/* Advanced controls — collapsible row of 5 dropdowns */}
+          <div className="border-t border-stone/10">
+            <button
+              onClick={() => setAdvancedOpen((o) => !o)}
+              className="w-full h-9 px-4 flex items-center justify-between font-mono text-[10px] text-stone/60 hover:text-stone tracking-wider"
+            >
+              <span className="flex items-center gap-2">
+                <SlidersHorizontal className="h-3 w-3" /> ADVANCED
+                <span className="text-stone/40">·</span>
+                <span className="text-stone/40">rank {rankBy} · views ≥{viewFloor.toLocaleString()} · {language} · {country} · deep {deepCount}</span>
+              </span>
+              {advancedOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            </button>
+            {advancedOpen && (
+              <div className="px-4 pb-4 pt-1 grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <SelectField
+                  label="RANK BY"
+                  value={rankBy}
+                  options={[
+                    ["engagement", "Engagement"],
+                    ["reach", "Reach"],
+                    ["views", "Views"],
+                  ]}
+                  onChange={(v) => setRankBy(v as typeof rankBy)}
+                />
+                <SelectField
+                  label="VIEW FLOOR"
+                  value={String(viewFloor)}
+                  options={[
+                    ["0", "0"],
+                    ["50000", "50K"],
+                    ["100000", "100K"],
+                    ["500000", "500K"],
+                    ["1000000", "1M"],
+                    ["5000000", "5M"],
+                  ]}
+                  onChange={(v) => setViewFloor(Number(v))}
+                />
+                <SelectField
+                  label="LANGUAGE"
+                  value={language}
+                  options={[
+                    ["en", "English"],
+                    ["id", "Indonesian"],
+                    ["any", "Any"],
+                  ]}
+                  onChange={(v) => setLanguage(v as typeof language)}
+                />
+                <SelectField
+                  label="COUNTRY"
+                  value={country}
+                  options={[
+                    ["US", "US"],
+                    ["GB", "UK"],
+                    ["AU", "AU"],
+                    ["IN", "IN"],
+                    ["CA", "CA"],
+                    ["ALL", "All"],
+                  ]}
+                  onChange={(v) => setCountry(v as typeof country)}
+                />
+                <SelectField
+                  label="DEEP COUNT"
+                  value={String(deepCount)}
+                  options={[
+                    ["0", "Off"],
+                    ["3", "3"],
+                    ["5", "5"],
+                    ["8", "8 (default)"],
+                    ["12", "12"],
+                    ["20", "20"],
+                  ]}
+                  onChange={(v) => setDeepCount(Number(v))}
+                />
+              </div>
+            )}
           </div>
 
           {/* Pipeline strip */}
@@ -371,7 +458,7 @@ export default function HomePage() {
               ) : (
                 <div className="space-y-1.5 font-mono text-[11px]">
                   <div className="flex justify-between text-stone"><span>Watch</span><span>~₹{Math.round(count * 2.5)}</span></div>
-                  <div className="flex justify-between text-stone"><span>Deep pass</span><span>~₹{Math.min(8, count) * 10}</span></div>
+                  <div className="flex justify-between text-stone"><span>Deep pass</span><span>~₹{deepCount * 10}</span></div>
                   <div className="flex justify-between text-stone"><span>Apify</span><span>~${(Math.max(count * 12, 300) * 0.0026).toFixed(2)}</span></div>
                 </div>
               )}
@@ -410,6 +497,33 @@ export default function HomePage() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function SelectField({
+  label, value, options, onChange,
+}: {
+  label: string;
+  value: string;
+  options: Array<[string, string]>;
+  onChange: (v: string) => void;
+}) {
+  return (
+    <div>
+      <label className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider block">{label}</label>
+      <div className="relative">
+        <select
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="w-full h-9 appearance-none rounded-lg border border-stone/20 bg-paper pl-3 pr-8 font-mono text-[12px] text-ink focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 cursor-pointer"
+        >
+          {options.map(([v, l]) => (
+            <option key={v} value={v}>{l}</option>
+          ))}
+        </select>
+        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone/40 pointer-events-none" />
       </div>
     </div>
   );
