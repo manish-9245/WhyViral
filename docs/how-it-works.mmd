@@ -1,0 +1,47 @@
+flowchart TD
+    Start([User enters keyword]) --> Choose{Choose platform}
+    Choose -->|TikTok| ScrapeTT[Apify: scrape TikTok]
+    Choose -->|Instagram| DiscoverIG[Gemini: discover IG hashtags + creators]
+    DiscoverIG --> ScrapeIG[Apify: scrape Instagram reels]
+    Choose -->|Meta| DeriveBrands[Derive brand list from keyword]
+    DeriveBrands --> ScrapeMeta[Apify: scrape Meta Ad Library]
+    Choose -->|All| ScrapeAll[Run all three in parallel]
+
+    ScrapeTT --> Pool[(Pool: ~300 raw videos)]
+    ScrapeIG --> Pool
+    ScrapeMeta --> Pool
+    ScrapeAll --> Pool
+
+    Pool --> Prescreen[Pre-screen: caption + language filter]
+    Prescreen -->|Keep ~30| Watch{AI watch each video}
+
+    Watch --> CacheCheck{Cached in<br/>output/analyses.json?}
+    CacheCheck -->|Yes| Reuse[Reuse cached analysis]
+    CacheCheck -->|No| Gemini[Gemini watches video<br/>hook · visuals · spoken line]
+    Gemini --> SaveCache[Save to output/analyses.json]
+    Reuse --> Next
+    SaveCache --> Next[Next video]
+
+    Next --> HaveEnough{Enough videos?}
+    HaveEnough -->|No| Watch
+    HaveEnough -->|Yes| Synthesize[Synthesize: cluster winning patterns]
+
+    Synthesize --> Report[Write report JSON<br/>output/report-platform.json]
+    Report --> Wall[/Wall: render String Board/]
+    Wall --> Verify{Verify a cluster}
+    Verify -->|Open source link| Tape[Source tape on TikTok/IG/Meta]
+    Verify -->|Shoot new piece| Shoot[Create content from proven hook]
+    Tape --> Done([Done])
+    Shoot --> Done
+
+    classDef ext fill:#fde68a,stroke:#f59e0b,color:#0a0a0b
+    classDef ai fill:#0a0a0b,stroke:#0a0a0b,color:#fdfbf7
+    classDef store fill:#fdfbf7,stroke:#78716c,color:#0a0a0b
+    classDef decision fill:#fff,stroke:#0a0a0b,color:#0a0a0b
+    classDef done fill:#f59e0b,stroke:#0a0a0b,color:#0a0a0b
+
+    class ScrapeTT,ScrapeIG,ScrapeMeta,DiscoverIG,DeriveBrands,Tape ext
+    class Gemini,Synthesize,Prescreen,Watch ai
+    class Pool,Report,SaveCache store
+    class Choose,CacheCheck,HaveEnough,Verify decision
+    class Start,Done done
