@@ -1,17 +1,19 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Save, Eye, EyeOff, Trash2, Database, Settings, ChevronDown } from "lucide-react";
+import { CheckCircle2, Save, Eye, EyeOff, Trash2, Database, Settings, ChevronDown, Plug, AlertCircle, Loader2 } from "lucide-react";
 
 type Env = Record<string, string>;
+type Health = { ok: boolean; message: string; service: string }[];
 
-function SelectField({ label, value, options }: { label: string; value: string; options: Array<[string, string]> }) {
+function SelectField({ label, value, options, onChange }: { label: string; value: string; options: Array<[string, string]>; onChange: (v: string) => void }) {
   return (
     <div>
       <label className="font-mono text-[10px] text-stone/60 tracking-wider block mb-1.5">{label}</label>
       <div className="relative">
         <select
           value={value}
+          onChange={(e) => onChange(e.target.value)}
           className="w-full h-9 appearance-none rounded-lg border border-stone/20 bg-paper pl-3 pr-8 font-mono text-[12px] text-ink focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 cursor-pointer"
         >
           {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
@@ -29,6 +31,8 @@ export default function SettingsPage() {
   const [showTokens, setShowTokens] = useState(false);
   const [cache, setCache] = useState<{ count: number; size: number; mtime: string | null } | null>(null);
   const [saved, setSaved] = useState(false);
+  const [health, setHealth] = useState<Health | null>(null);
+  const [healthLoading, setHealthLoading] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -43,6 +47,19 @@ export default function SettingsPage() {
 
   useEffect(() => { load(); }, []);
 
+  async function checkConnections() {
+    setHealthLoading(true);
+    setHealth(null);
+    try {
+      const r = await fetch("/api/keys", { method: "POST" });
+      const j = await r.json();
+      setHealth(j.results || []);
+    } catch (e) {
+      setHealth([{ service: "network", ok: false, message: String(e) }]);
+    }
+    setHealthLoading(false);
+  }
+
   async function save() {
     setSaving(true);
     const body: Record<string, string> = {};
@@ -53,11 +70,17 @@ export default function SettingsPage() {
         if (v && !v.includes("•")) body[k] = v;
       }
     }
+    // Also include select-driven run defaults
+    const selectKeys = ["VIDEO_COUNT", "RANK_BY", "VIEW_FLOOR", "LANGUAGE", "COUNTRY", "DEEP_COUNT"];
+    for (const k of selectKeys) {
+      if (env[k] !== undefined) body[k] = env[k];
+    }
     await fetch("/api/settings", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
     setSaving(false);
     setSaved(true);
     setTimeout(() => setSaved(false), 2500);
     load();
+    checkConnections();
   }
 
   async function clearCache() {
@@ -123,6 +146,42 @@ export default function SettingsPage() {
           </button>
         </div>
 
+        {/* Connections health */}
+        <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
+          <div className="h-10 px-5 flex items-center justify-between border-b border-stone/10">
+            <div className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-stone/60">
+              <Plug className="h-3.5 w-3.5" /> CONNECTIONS
+            </div>
+            <button
+              onClick={checkConnections}
+              disabled={healthLoading}
+              className="h-7 px-3 rounded-lg border border-stone/20 bg-white font-mono text-[11px] text-stone hover:bg-stone-50 disabled:opacity-50 flex items-center gap-1.5 transition-colors"
+            >
+              {healthLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plug className="h-3 w-3" />}
+              Check now
+            </button>
+          </div>
+          <div className="p-5">
+            {!health && !healthLoading && (
+              <p className="font-mono text-[12px] text-stone/50">Click <span className="text-stone">Check now</span> to verify Apify + Gemini are reachable.</p>
+            )}
+            {healthLoading && <p className="font-mono text-[12px] text-stone/50">Pinging providers…</p>}
+            {health && (
+              <div className="space-y-2">
+                {health.map((h) => (
+                  <div key={h.service} className={`flex items-start gap-2 p-3 rounded-lg border ${h.ok ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50"}`}>
+                    {h.ok ? <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" /> : <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />}
+                    <div className="min-w-0 flex-1">
+                      <div className="font-mono text-[12px] font-semibold text-ink">{h.service}</div>
+                      <div className="font-mono text-[11px] text-stone/70 mt-0.5 break-words leading-4">{h.message}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* API Keys */}
         <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
           <div className="h-10 px-5 flex items-center gap-2 border-b border-stone/10 font-mono text-[11px] tracking-wider text-stone/60">
@@ -147,31 +206,37 @@ export default function SettingsPage() {
               label="VIDEO COUNT"
               value={env.VIDEO_COUNT || "5"}
               options={[["5","5"],["10","10"],["20","20"],["30","30"],["50","50"],["100","100"]]}
+              onChange={(v) => setEnv({ ...env, VIDEO_COUNT: v })}
             />
             <SelectField
               label="RANK BY"
               value={env.RANK_BY || "engagement"}
               options={[["engagement","Engagement"],["reach","Reach"],["views","Views"]]}
+              onChange={(v) => setEnv({ ...env, RANK_BY: v })}
             />
             <SelectField
               label="VIEW FLOOR"
               value={String(env.VIEW_FLOOR || "100000")}
               options={[["0","0"],["50000","50K"],["100000","100K"],["500000","500K"],["1000000","1M"]]}
+              onChange={(v) => setEnv({ ...env, VIEW_FLOOR: v })}
             />
             <SelectField
               label="LANGUAGE"
               value={env.LANGUAGE || "en"}
               options={[["en","English"],["id","Indonesian"],["any","Any"]]}
+              onChange={(v) => setEnv({ ...env, LANGUAGE: v })}
             />
             <SelectField
               label="COUNTRY"
               value={env.COUNTRY || "US"}
               options={[["US","US"],["GB","UK"],["AU","AU"],["IN","IN"],["CA","CA"],["ALL","All"]]}
+              onChange={(v) => setEnv({ ...env, COUNTRY: v })}
             />
             <SelectField
               label="DEEP COUNT"
               value={String(env.DEEP_COUNT || "8")}
               options={[["0","Off"],["3","3"],["5","5"],["8","8 (default)"],["12","12"],["20","20"]]}
+              onChange={(v) => setEnv({ ...env, DEEP_COUNT: v })}
             />
           </div>
         </div>
