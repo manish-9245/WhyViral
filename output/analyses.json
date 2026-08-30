@@ -1,1 +1,550 @@
-{}
+{
+  "3726495539383554184": {
+    "hook": {
+      "visual": "A nerdy-looking cartoonish man wearing glasses with a GPT-5 logo overlay",
+      "spoken": "none",
+      "on_screen_text": "Bro : I'm learning Ai"
+    },
+    "hook_type": "comparison",
+    "format": "comparison",
+    "visual_style": "text-on-screen montage",
+    "broll_ratio": "mostly-broll",
+    "tone": "gen-z-casual",
+    "pacing": "medium",
+    "recurring_text_overlay": "none",
+    "angle": "curiosity gap",
+    "persuasion_tactics": [
+      "relatability",
+      "authority"
+    ],
+    "target_audience": "Aspiring and current software engineers, AI developers, and tech enthusiasts looking to build real AI applications",
+    "primary_topic": "Highlighting the advanced AI developer stack (including LangChain) vs. basic ChatGPT users",
+    "niche_match": "core",
+    "key_claims": [
+      "Just using basic models like GPT is beginner-level",
+      "Real AI developers use a robust ecosystem stack including LangChain, Hugging Face, Claude, Supabase, and Cursor"
+    ],
+    "cta": "none",
+    "why_it_works": "It leverages a popular Gen-Z comparison meme format ('Bro vs. Me') to tap into developer tribalism, making viewers feel elite for using advanced tools like LangChain instead of just standard ChatGPT.",
+    "spoken_language": "none",
+    "schema_version": "4",
+    "duration_seconds": "9",
+    "script": [
+      {
+        "spoken": "none",
+        "on_screen_text": "Bro : I'm learning Ai",
+        "visual": "Static image of a nerdy-looking man with glasses and a GPT-5 logo card underneath his chin, representing basic AI users."
+      },
+      {
+        "spoken": "none",
+        "on_screen_text": "Me too....",
+        "visual": "Transition to a cool, stylish young guy pointing his finger upward, surrounded by advanced developer logos including LangChain, Hugging Face, OpenRouter, Supabase, n8n, Claude 3.7 Sonnet, Cursor, and Notion AI."
+      }
+    ],
+    "analysis_tier": "2",
+    "niche_for": "Langchain"
+  },
+  "3817305194963629598": {
+    "hook": {
+      "visual": "Creator on camera holding a lapel mic, green-screened over a website showing 'Intro to Agentic AI'",
+      "spoken": "If you watch these three videos, you'll know more about agentic AI than 99%",
+      "on_screen_text": "IF YOU WATCH THESE YOU'LL KNOW MORE ABOUT AGENTIC AI THAN 99%"
+    },
+    "hook_type": "bold claim",
+    "format": "listicle",
+    "visual_style": "green screen / stitch",
+    "broll_ratio": "mostly-talking-head",
+    "tone": "professional-authoritative",
+    "pacing": "medium",
+    "recurring_text_overlay": "ALL-CAPS BLACK TEXT ON WHITE BACKGROUND CAPTIONS",
+    "angle": "curiosity gap",
+    "persuasion_tactics": [
+      "authority",
+      "specificity",
+      "social proof"
+    ],
+    "target_audience": "Developers, tech professionals, and AI builders looking to master Agentic AI",
+    "primary_topic": "Recommending 3 high-quality educational videos to learn Agentic AI",
+    "niche_match": "adjacent",
+    "key_claims": [
+      "Watching these three videos will put you ahead of 99% of people in agentic AI knowledge",
+      "The tutorials are taught by top-tier industry experts from Meta, OpenAI, AWS, and LangChain",
+      "Evaluations help drive system improvement and ensure agents stay aligned"
+    ],
+    "cta": "Comment AGENT for all three links",
+    "why_it_works": "It curates extremely high-value, gatekept knowledge from top industry authorities and promises a massive shortcut to expertise, while using a comment-for-link trigger to boost algorithmic reach.",
+    "spoken_language": "English",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3902975384264741697": {
+    "hook": {
+      "visual": "Split-screen showing a website 'Lightning Lessons' on top and the creator on camera holding a lapel mic on the bottom.",
+      "spoken": "If you watch these three videos, you'll know more about agentic AI than 99% of people.",
+      "on_screen_text": "IF YOU WATCH THESE / YOU'LL KNOW MORE ABOUT / AGENTIC AI THAN 99%"
+    },
+    "hook_type": "bold claim",
+    "format": "listicle",
+    "visual_style": "green screen / stitch",
+    "broll_ratio": "balanced",
+    "tone": "professional-authoritative",
+    "pacing": "fast-cut",
+    "recurring_text_overlay": "none",
+    "angle": "curiosity gap",
+    "persuasion_tactics": [
+      "authority",
+      "specificity",
+      "social proof"
+    ],
+    "target_audience": "Developers and tech professionals looking to master Agentic AI and leverage top-tier industry resources",
+    "primary_topic": "Recommending three free educational videos to master Agentic AI",
+    "niche_match": "adjacent",
+    "key_claims": [
+      "Watching these three specific videos will place you in the top 1% of Agentic AI knowledge.",
+      "The recommended lessons are taught by world-class AI experts from MAANG, OpenAI, and LangChain."
+    ],
+    "cta": "Comment AGENT for all three links",
+    "why_it_works": "The hook leverages FOMO and status by promising to put the viewer in the top 1% of AI knowledge, and immediately validates this claim by using extreme authority-bias, citing instructors from Meta, AWS, OpenAI, and LangChain.",
+    "spoken_language": "English",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3845506822518362443": {
+    "hook": {
+      "visual": "Split-screen with the top half showing LinkedIn AI Engineer job postings with $195k-$300k salaries and the bottom half showing the creator on camera talking to a mini-microphone.",
+      "spoken": "Everybody wants to become an AI engineer. So this guy analyzed",
+      "on_screen_text": "EVERYBODY WANTS TO BECOME"
+    },
+    "hook_type": "bold claim",
+    "format": "education",
+    "visual_style": "green screen / stitch",
+    "broll_ratio": "balanced",
+    "tone": "calm-educational",
+    "pacing": "fast-cut",
+    "recurring_text_overlay": "EVERYBODY WANTS TO BECOME",
+    "angle": "myth busting",
+    "persuasion_tactics": [
+      "specificity",
+      "authority",
+      "problem-solution"
+    ],
+    "target_audience": "Software developers and tech professionals looking to pivot into artificial intelligence roles",
+    "primary_topic": "Analyzing 900 job listings to identify the most in-demand skills and frameworks (including LangChain) for AI Engineers",
+    "niche_match": "core",
+    "key_claims": [
+      "Most AI Engineer jobs do not require a deep machine learning background.",
+      "Python, AWS, Docker, and Kubernetes are highly requested foundational skills.",
+      "LangChain and LangGraph are the top two AI-specific orchestration frameworks worth learning."
+    ],
+    "cta": "comment AI and I'll send it over",
+    "why_it_works": "It hooks viewers with lucrative tech salaries and immediately delivers high-value, data-backed insights that bust common misconceptions about entering the AI field.",
+    "spoken_language": "English",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3949854034478666612": {
+    "hook": {
+      "visual": "Creator on camera holding a mini microphone and gesturing",
+      "spoken": "देखो अगर तुम न कभी अपने प्रोग्राम में न किसी एपीआई को यूज़ करोगे न एलएलएम की",
+      "on_screen_text": "langchain explained simply"
+    },
+    "hook_type": "problem callout",
+    "format": "problem-solution",
+    "visual_style": "talking head",
+    "broll_ratio": "balanced",
+    "tone": "gen-z-casual",
+    "pacing": "fast-cut",
+    "recurring_text_overlay": "langchain explained simply",
+    "angle": "problem-solution explanation",
+    "persuasion_tactics": [
+      "problem-solution",
+      "specificity",
+      "relatability"
+    ],
+    "target_audience": "Developers and programmers wanting to use LLMs/APIs and understand LangChain",
+    "primary_topic": "Explaining what LangChain is and how it solves the memory problem in LLMs",
+    "niche_match": "core",
+    "key_claims": [
+      "LLM APIs are stateless and don't remember previous prompts on their own",
+      "LangChain connects LLMs to tools, memory, RAG, and vector databases",
+      "LangChain allows the LLM to retrieve past conversation details automatically"
+    ],
+    "cta": "Support this video with views to get a follow-up video explaining LangGraph",
+    "why_it_works": "It demonstrates a real coding frustration (stateless LLM API forgetting context) and uses clear visuals and simple diagrams to show how LangChain acts as a solution.",
+    "spoken_language": "Hindi",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3951253741252301152": {
+    "hook": {
+      "visual": "Split-screen layout with the top half showing a laptop displaying an animated nodes-and-edges graph, and the bottom half showing the creator talking into a microphone.",
+      "spoken": "AI industry mein ek bada shift aaya hai, suddenly prompt engineering...",
+      "on_screen_text": "none"
+    },
+    "hook_type": "bold claim",
+    "format": "education",
+    "visual_style": "talking head",
+    "broll_ratio": "balanced",
+    "tone": "calm-educational",
+    "pacing": "medium",
+    "recurring_text_overlay": "none",
+    "angle": "curiosity gap",
+    "persuasion_tactics": [
+      "authority",
+      "specificity",
+      "problem-solution"
+    ],
+    "target_audience": "AI developers, software engineers, and tech enthusiasts wanting to build advanced AI agents",
+    "primary_topic": "explaining the shift to graph engineering and how to build multi-agent AI systems using LangGraph",
+    "niche_match": "core",
+    "key_claims": [
+      "The AI industry has shifted from Prompt Engineering to Loop Engineering, and now to Graph Engineering.",
+      "Single AI agents fail at complex tasks, requiring multi-agent systems built via Graph Engineering.",
+      "LangGraph is the leading framework used by developers to build these graph-based AI workflows."
+    ],
+    "cta": "Follow for more AI content and read the linked LangChain blog post.",
+    "why_it_works": "It simplifies complex software architecture concepts using clean, intuitive motion graphics and a split-screen format that maintains personal connection.",
+    "spoken_language": "Hindi",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3888173327189656674": {
+    "hook": {
+      "visual": "Creator on camera talking directly to the lens, wearing a red patterned top with a blue bulletin board behind her",
+      "spoken": "ఈ resources ని ఎగ్జాక్ట్ ఆర్డర్ లో ఫాలో అయితే RAG లో ఉన్న కాన్సెప్ట్స్ నేర్చుకోవడంతో పాటు",
+      "on_screen_text": "Resources / same order / RAG concepts / implementation with proper design"
+    },
+    "hook_type": "authority",
+    "format": "education",
+    "visual_style": "talking head + screenshots",
+    "broll_ratio": "balanced",
+    "tone": "calm-educational",
+    "pacing": "medium",
+    "recurring_text_overlay": "blue text overlay highlighting key technical terms",
+    "angle": "curated learning path",
+    "persuasion_tactics": [
+      "authority",
+      "specificity"
+    ],
+    "target_audience": "Software developers and AI enthusiasts looking to learn and implement Retrieval-Augmented Generation (RAG) using LangChain",
+    "primary_topic": "Step-by-step roadmap and resource guide to master LangChain RAG concepts and implementation",
+    "niche_match": "core",
+    "key_claims": [
+      "Following these specific resources in order will teach both RAG concepts and proper system design",
+      "LangChain RAG documentation explains the exact pipeline including code snippets explicitly",
+      "The learning path takes 3 to 4 days if you are consistent",
+      "Microsoft's RAG-time repository teaches why industries are moving from classic RAG to agentic RAG"
+    ],
+    "cta": "none",
+    "why_it_works": "It breaks down a complex AI development concept (RAG) into an actionable, structured curriculum referencing highly-credible free resources, which saves developers hours of research.",
+    "spoken_language": "Telugu",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3853482008593383610": {
+    "hook": {
+      "visual": "Creator's hand pointing at a whiteboard filled with diagrams about AI, Agentic Frameworks, and LangChain",
+      "spoken": "Okay so I bought a whiteboard because no one was understanding why agents are a waste of time.",
+      "on_screen_text": "OKAY SO I BOUGHT A WHITEBOARD"
+    },
+    "hook_type": "bold claim",
+    "format": "education",
+    "visual_style": "talking head",
+    "broll_ratio": "balanced",
+    "tone": "professional-authoritative",
+    "pacing": "fast-cut",
+    "recurring_text_overlay": "dynamic word-by-word captions",
+    "angle": "curiosity gap",
+    "persuasion_tactics": [
+      "authority",
+      "problem-solution",
+      "specificity"
+    ],
+    "target_audience": "AI developers, software engineers, and tech founders building AI agents",
+    "primary_topic": "Deconstructing AI agent frameworks and proposing a file-tree mental model for AI application architecture",
+    "niche_match": "adjacent",
+    "key_claims": [
+      "Building custom agent frameworks is a waste of time because they get replaced by foundational model updates",
+      "Developers are operating at the wrong abstraction layer",
+      "AI architectures should be modeled as file trees with workflows, tasks, prompts, tools, and data"
+    ],
+    "cta": "none",
+    "why_it_works": "The physical whiteboard drawing makes complex technical architecture easy to follow, while the controversial opening hook grabs developers who are struggling with constantly outdated AI codebases.",
+    "spoken_language": "English",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3907038579773476708": {
+    "hook": {
+      "visual": "Close-up of a middle-aged man with a beard and pink checkered shirt speaking and gesturing with his hands",
+      "spoken": "ரிசல்ட் வந்து அந்த கேப்ல போய் பைத்தான் படிக்கிறாங்க",
+      "on_screen_text": "none"
+    },
+    "hook_type": "problem callout",
+    "format": "education",
+    "visual_style": "talking head",
+    "broll_ratio": "mostly-talking-head",
+    "tone": "calm-educational",
+    "pacing": "medium",
+    "recurring_text_overlay": "none",
+    "angle": "career advice",
+    "persuasion_tactics": [
+      "authority",
+      "specificity",
+      "relatability"
+    ],
+    "target_audience": "Engineering students and tech aspirants seeking guidance on relevant skills in the AI era",
+    "primary_topic": "Educational career advice discussing the shift from learning basic coding languages to learning AI integration tools like LangChain",
+    "niche_match": "adjacent",
+    "key_claims": [
+      "Learning just a programming language does not guarantee employment because technologies update constantly",
+      "Students must focus on fundamentals like data structures, algorithms, APIs, and automation",
+      "Learning modern AI integration tools like LangChain and Hugging Face is essential for future relevance"
+    ],
+    "cta": "none",
+    "why_it_works": "It tackles a common anxiety among engineering students regarding employability and breaks down complex industry requirements into simple, actionable steps using a trusted interview format.",
+    "spoken_language": "Tamil",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3846834520373211077": {
+    "hook": {
+      "visual": "Text overlay on a clip of Hugh Jackman happily greeting interviewers on a red carpet with dramatic camera zooms.",
+      "spoken": "none",
+      "on_screen_text": "me when the topic is LangChain, Vector Databases, RAGS, MLOps, Model Fine Tuning, Triton Interference Server, Weights & Biases"
+    },
+    "hook_type": "relatability",
+    "format": "meme",
+    "visual_style": "meme video",
+    "broll_ratio": "mostly-broll",
+    "tone": "sarcastic-humor",
+    "pacing": "fast-cut",
+    "recurring_text_overlay": "none",
+    "angle": "relatability",
+    "persuasion_tactics": [
+      "relatability",
+      "emotional trigger"
+    ],
+    "target_audience": "AI engineers, software developers, and MLOps specialists",
+    "primary_topic": "Meme about being excited to talk about machine learning and AI technologies",
+    "niche_match": "adjacent",
+    "key_claims": [
+      "LangChain and other MLOps/AI tools are exciting topics that developers love talking about."
+    ],
+    "cta": "none",
+    "why_it_works": "It taps into the niche identity of AI developers by listing highly specific industry buzzwords alongside an enthusiastic, recognizable celebrity reaction clip.",
+    "spoken_language": "none",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3779549552345726962": {
+    "hook": {
+      "visual": "A female creator in a black outfit closes her laptop on camera, transitioning immediately to a screen showing python code.",
+      "spoken": "When it comes to evaluating a RAG system, measuring the accuracy of a retrieval is absolutely critical.",
+      "on_screen_text": "RAG EVALUATION"
+    },
+    "hook_type": "problem callout",
+    "format": "education",
+    "visual_style": "voiceover + b-roll",
+    "broll_ratio": "mostly-broll",
+    "tone": "calm-educational",
+    "pacing": "medium",
+    "recurring_text_overlay": "none",
+    "angle": "technical education",
+    "persuasion_tactics": [
+      "problem-solution",
+      "specificity"
+    ],
+    "target_audience": "AI developers and software engineers building retrieval-augmented generation applications",
+    "primary_topic": "Evaluating RAG pipelines using Ragas metrics and Langchain",
+    "niche_match": "core",
+    "key_claims": [
+      "RAG evaluation depends on four key factors: faithfulness, answer relevancy, context precision, and context recall",
+      "Frameworks like Ragas make evaluation easy by offering built-in modules for these metrics"
+    ],
+    "cta": "none",
+    "why_it_works": "The creator effectively balances high-level conceptual diagrams on paper with real code execution in an IDE, making a complex technical topic easy to digest for engineers.",
+    "spoken_language": "English",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3844054093132243923": {
+    "hook": {
+      "visual": "Split-screen with the creator sitting on a couch with a laptop on the bottom half, and a YouTube logo on the top half.",
+      "spoken": "You should skip Netflix for one week and watch these six free YouTube videos",
+      "on_screen_text": "Skip Netflix for one week\nLearn the core of AI engineer in 6 YouTube videos"
+    },
+    "hook_type": "bold claim",
+    "format": "listicle",
+    "visual_style": "green screen / stitch",
+    "broll_ratio": "balanced",
+    "tone": "warm-friendly",
+    "pacing": "medium",
+    "recurring_text_overlay": "none",
+    "angle": "resource recommendation",
+    "persuasion_tactics": [
+      "specificity",
+      "authority",
+      "problem-solution"
+    ],
+    "target_audience": "Software developers and aspiring tech professionals looking to transition into AI engineering",
+    "primary_topic": "Recommending six free YouTube videos to learn foundational AI engineering and RAG development",
+    "niche_match": "core",
+    "key_claims": [
+      "You can learn the core principles of AI engineering in just one week.",
+      "Watching curated free YouTube videos is sufficient to learn Python for AI, FastAPI, LLMs, RAG, AI Agents, and LLMOps."
+    ],
+    "cta": "none",
+    "why_it_works": "The video presents a high-value, structured learning path using free resources, framed as a realistic alternative to entertainment ('skip Netflix for one week'), which lowers the barrier to entry for a complex topic.",
+    "spoken_language": "English",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3885683182560260797": {
+    "hook": {
+      "visual": "A creator wearing a black Adidas t-shirt sits at a desk typing on a mechanical keyboard, looking briefly at the camera.",
+      "spoken": "If you were to disappear and become an AI engineer next year, this is how we're going to do it.",
+      "on_screen_text": "Become an AI Engineer by 2027"
+    },
+    "hook_type": "transformation",
+    "format": "tutorial",
+    "visual_style": "talking head with green-screen overlays",
+    "broll_ratio": "balanced",
+    "tone": "calm-educational",
+    "pacing": "fast-cut",
+    "recurring_text_overlay": "none",
+    "angle": "transformation",
+    "persuasion_tactics": [
+      "authority",
+      "specificity",
+      "problem-solution"
+    ],
+    "target_audience": "Aspiring developers and self-taught programmers looking to break into the AI field",
+    "primary_topic": "A step-by-step roadmap with free courses to become an AI engineer.",
+    "niche_match": "adjacent",
+    "key_claims": [
+      "You can become an AI engineer by learning Python, machine learning, math, LLMs, and RAG",
+      "All the listed resources and courses are completely free"
+    ],
+    "cta": "comment 'AI' for the full list",
+    "why_it_works": "It taps into the high-intent 'disappear and level up' trend while delivering immediate value through highly recognizable, free resources like Harvard's CS50 and Andrej Karpathy's lectures.",
+    "spoken_language": "English",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3916475501277052115": {
+    "hook": {
+      "visual": "creator on camera holding a mini lav mic, with graphic overlays of 'AGENTIC AI' and 'FREE COURSE'",
+      "spoken": "2024 low highest paying AI skill ento telusa? Agentic AI.",
+      "on_screen_text": "AGENTIC AI"
+    },
+    "hook_type": "question",
+    "format": "listicle",
+    "visual_style": "talking head",
+    "broll_ratio": "mostly-talking-head",
+    "tone": "warm-friendly",
+    "pacing": "medium",
+    "recurring_text_overlay": "none",
+    "angle": "curiosity gap",
+    "persuasion_tactics": [
+      "specificity",
+      "authority",
+      "problem-solution"
+    ],
+    "target_audience": "Tech students and software developers looking to learn AI agent development and get high-paying jobs",
+    "primary_topic": "Recommending three free courses to learn Agentic AI (including LangChain Academy)",
+    "niche_match": "core",
+    "key_claims": [
+      "Agentic AI is the highest-paying AI skill in 2024.",
+      "Completing these free courses and adding them to your resume can help you land 20-30 LPA roles.",
+      "LangChain Academy offers an advanced course on building Deep Agents."
+    ],
+    "cta": "Comment \"Agent\" to receive the course links directly in DM and follow the page",
+    "why_it_works": "It taps into career ambition by mentioning high-paying salary figures (20-30 LPA) and then immediately offers free, reputable resources to learn the skill, combined with a friction-free comment-to-DM call to action.",
+    "spoken_language": "Telugu",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3843280258565269054": {
+    "hook": {
+      "visual": "A finger pointing at a LinkedIn job posting on a mobile phone showing a salary of 45-50 LPA.",
+      "spoken": "ye jo posting dekho isme salary 45 to 50 LPA hai lekin ye ek aisi skill maang raha hai jo 90% developers ko pata hi nahi hai",
+      "on_screen_text": "Agentic AI Engineer Salary 45-50+ LPA"
+    },
+    "hook_type": "bold claim",
+    "format": "listicle",
+    "visual_style": "voiceover + b-roll",
+    "broll_ratio": "mostly-broll",
+    "tone": "calm-educational",
+    "pacing": "medium",
+    "recurring_text_overlay": "✅ HuggingFace Agents Course, ✅ Google ADK, ✅ Deep Agents",
+    "angle": "curiosity gap",
+    "persuasion_tactics": [
+      "specificity",
+      "problem-solution",
+      "authority",
+      "scarcity"
+    ],
+    "target_audience": "Indian software developers and tech students wanting to enter the high-paying AI field without an AI background.",
+    "primary_topic": "Free online courses to learn Agentic AI, including LangChain, Google ADK, and Hugging Face.",
+    "niche_match": "core",
+    "key_claims": [
+      "Agentic AI jobs offer high salaries of 45-50+ LPA in India.",
+      "90% of developers do not currently have Agentic AI skills.",
+      "Anyone can learn Agentic AI without an prior AI background using free courses."
+    ],
+    "cta": "Comment AGENT to get course links in DM, and follow for more AI/Backend content.",
+    "why_it_works": "It uses a real LinkedIn job description showing a massive salary to capture immediate attention, then triggers curiosity by offering free resources to master this 'secret' high-paying skill.",
+    "spoken_language": "Hindi",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  },
+  "3937597781382989119": {
+    "hook": {
+      "visual": "Creator on camera in a bottom-right bubble pointing up at a GitHub repository screen share with the title 'How to Build AI Agents Completely Free in 2026'",
+      "spoken": "What's up, guys? So if you ever wanted to build your own free AI",
+      "on_screen_text": "🚨 BUILD YOUR OWN AI AGENT 100% FREE"
+    },
+    "hook_type": "bold claim",
+    "format": "tutorial",
+    "visual_style": "green screen / stitch",
+    "broll_ratio": "balanced",
+    "tone": "hyped-urgent",
+    "pacing": "medium",
+    "recurring_text_overlay": "👉 https://github.com/Moh4696/build-ai-agents-free",
+    "angle": "how-to value savings",
+    "persuasion_tactics": [
+      "risk reversal",
+      "specificity",
+      "problem-solution"
+    ],
+    "target_audience": "Developers and tech hobbyists looking to build AI agents without running up expensive API bills",
+    "primary_topic": "How to build local, free AI agents using a specific GitHub template that utilizes LangChain and free models",
+    "niche_match": "core",
+    "key_claims": [
+      "You can build production-ready AI agents with zero cost",
+      "No subscriptions, no API bills, and no credit cards required",
+      "Runs entirely on your own local computer forever"
+    ],
+    "cta": "Go to the GitHub link provided on screen to get the repository: https://github.com/Moh4696/build-ai-agents-free",
+    "why_it_works": "It hooks the viewer with a massive promise—building an AI agent 100% free with no hidden API costs—and immediately backs it up by scrolling through a real, open-source GitHub repository showing the exact code and installation steps.",
+    "spoken_language": "English",
+    "schema_version": "4",
+    "analysis_tier": "1",
+    "niche_for": "Langchain"
+  }
+}

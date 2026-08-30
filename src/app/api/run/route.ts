@@ -25,6 +25,33 @@ function withTimeout<T>(p: Promise<T>, ms: number): Promise<T> {
   return Promise.race([p, timeout]).finally(() => clearTimeout(t));
 }
 
+// Translate raw provider errors into customer-facing copy with retry advice.
+function friendlyError(err: unknown, stage: "scrape" | "watch" | "synth" | "prescreen" | "discover"): { message: string; advice: string; severity: "warn" | "block" } {
+  const raw = String((err as Error)?.message || err || "");
+  const lower = raw.toLowerCase();
+  if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted")) {
+    return {
+      message: "AI is rate-limited right now.",
+      advice: "Free tier caps at 20 requests/day on gemini-3.5-flash. Wait ~1 min, or switch to a paid key in Settings. Re-running will reuse cached videos — no extra cost.",
+      severity: "warn",
+    };
+  }
+  if (lower.includes("api key") || lower.includes("401") || lower.includes("403") || lower.includes("permission")) {
+    return {
+      message: "API key missing or invalid.",
+      advice: "Open Settings and paste a fresh APIFY_TOKEN + GEMINI_API_KEY, then Check Connections.",
+      severity: "block",
+    };
+  }
+  if (lower.includes("econnrefused") || lower.includes("enotfound") || lower.includes("network")) {
+    return { message: "Network unreachable.", advice: "Check your connection — WhyViral runs locally and needs outbound HTTPS to Apify + Google.", severity: "block" };
+  }
+  if (lower.includes("timed out")) {
+    return { message: `${stage} took too long.`, advice: "A video stalled — likely a large file. Try a smaller target count, or re-run to skip cached ones.", severity: "warn" };
+  }
+  return { message: `${stage} failed.`, advice: raw.length < 240 ? raw : raw.slice(0, 200) + "…", severity: "warn" };
+}
+
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const keywords: string[] = body.keywords?.length ? body.keywords : ["magnesium gummies"];
@@ -123,7 +150,9 @@ export async function POST(req: NextRequest) {
               fullPool = r.pool;
             }
           } catch (e) {
-            log(`❌ Scrape failed: ${(e as Error).message}`);
+            const fe = friendlyError(e, "scrape");
+            log(`❌ ${fe.message} — ${fe.advice}`);
+            send({ type: "warn", stage: "scrape", severity: fe.severity, message: fe.message, advice: fe.advice });
             await trackEvent("run_failed", { platform, errorStage: "scrape" });
             continue;
           }
@@ -164,7 +193,7 @@ export async function POST(req: NextRequest) {
                 const dropIds = new Set([...verdicts].filter(([, verd]) => verd === "unlikely").map(([id]) => id));
                 screened = candidates.filter((v) => !dropIds.has(v.id as string));
                 log(`   Dropped ${dropIds.size} off-category.`);
-              } catch (e) { log(`   ⚠️ prescreen failed: ${(e as Error).message}`); }
+              } catch (e) { log(`   ⚠️ prescreen failed: ${(e as Error).message}`); send({ type: "warn", stage: "prescreen", severity: "warn", message: "Prescreen skipped — videos accepted by default.", advice: (e as Error).message }); }
             }
           }
 
@@ -182,6 +211,7 @@ export async function POST(req: NextRequest) {
 
           const CONCURRENCY = Number(process.env.ANALYZE_CONCURRENCY) || (isVertex() ? 6 : 3);
           const effortCap = Math.max(count * 6, 60);
+          let totalCacheHits = 0;
           for (let w = 0; w < screened.length; w += CONCURRENCY) {
             if (okVideos.length >= count) { log(`\n🧮 Reached ${count} core — done Tier 1.`); break; }
             if (w >= effortCap) { log(`\n🧮 Sifted ${w} candidates — filling from adaptable.`); break; }
@@ -199,12 +229,20 @@ export async function POST(req: NextRequest) {
                   (analysis as unknown as Record<string,unknown>).analysis_tier = "2";
                 }
                 return { v, analysis, fromCache: false as const };
-              } catch (err) { return { v, error: (err as Error).message }; }
+              } catch (e) {
+                const fe = friendlyError(e, "watch");
+                log(`   ⚠️ ${fe.message} — ${fe.advice}`);
+                send({ type: "warn", stage: "watch", severity: fe.severity, message: fe.message, advice: fe.advice });
+                return { v, error: fe.message };
+              }
             }));
             let newlyAnalyzed = 0;
+            let waveCacheHits = 0;
             for (const r of results as Array<{ v: import("@/lib/types").Video; analysis?: import("@/lib/types").Analysis; fromCache?: boolean }>) {
               if (r.analysis && !r.fromCache) { (cache as Record<string, unknown>)[r.v.id as string] = r.analysis; newlyAnalyzed++; }
+              if (r.fromCache) waveCacheHits++;
             }
+            totalCacheHits += waveCacheHits;
             if (newlyAnalyzed) saveCache(cache);
             for (const r of results as Array<{ v: import("@/lib/types").Video; analysis?: import("@/lib/types").Analysis; fromCache?: boolean; error?: string }>) {
               if (okVideos.length >= count) break;
@@ -232,7 +270,7 @@ export async function POST(req: NextRequest) {
               saveCache(cache);
               okAnalyses[idx] = deep;
               log(`   done — ${deep.script?.length || 0} rows`);
-            } catch (e) { log(`   ⚠️ deep failed: ${(e as Error).message}`); }
+            } catch (e) { const fe = friendlyError(e, "watch"); log(`   ⚠️ ${fe.message} — ${fe.advice}`); send({ type: "warn", stage: "watch", severity: "warn", message: fe.message, advice: fe.advice }); }
           }
 
           const adaptableSlots = Math.max(0, count - okVideos.length);
@@ -261,11 +299,29 @@ export async function POST(req: NextRequest) {
           await trackEvent("report_generated", { platform, referenceCount: allVids.length, patternsGenerated: patterns !== null, activation: allVids.length === count && patterns !== null });
           reports.push(`output/report-${platform}.json`);
           log(`\n✅ ${platform} done → output/report-${platform}.json`);
+
+          // Live cost metrics for the UI estimator
+          const deepActuallyRan = deepTargets.filter((_, i) => okAnalyses[i] && tierOf(okAnalyses[i]) === "2").length;
+          send({
+            type: "cost",
+            platform,
+            pool: fullPool.length,
+            apifyUsd: Number((fullPool.length * 0.0026).toFixed(2)),
+            tier1Calls: okAnalyses.length,
+            tier1Inr: Math.round(okAnalyses.length * 2.5),
+            tier2Calls: deepActuallyRan,
+            tier2Inr: Math.round(deepActuallyRan * 10),
+            synthRan: !!patterns,
+            synthInr: patterns ? 18 : 0,
+            cacheHits: totalCacheHits,
+          });
         }
 
         send({ type: "done", reports });
       } catch (e) {
-        send({ type: "log", message: `❌ Workflow failed: ${(e as Error).message}` });
+        const fe = friendlyError(e, "watch");
+        send({ type: "error", severity: fe.severity, message: fe.message, advice: fe.advice });
+        send({ type: "log", message: `❌ ${fe.message} — ${fe.advice}` });
         send({ type: "done", reports: [] });
       } finally {
         console.log = origLog as never;

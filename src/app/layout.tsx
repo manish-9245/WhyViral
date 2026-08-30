@@ -65,7 +65,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <div className="flex items-center gap-3">
               <span className="opacity-60">Built by</span>
               <span className="font-semibold tracking-[0.06em]">Manish Tiwari</span>
-              <span className="hidden sm:inline-flex h-5 items-center rounded-full bg-ink text-paper px-2.5 text-[10px] tracking-[0.08em]">© 2026 — For strategists, with proof</span>
+              <a href="https://buildwithmanish.com" className="hidden sm:inline-flex h-5 items-center rounded-full bg-ink text-paper px-2.5 text-[10px] tracking-[0.08em] hover:opacity-80 transition-opacity">buildwithmanish.com</a>
             </div>
           </div>
         </footer>

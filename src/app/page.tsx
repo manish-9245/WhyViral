@@ -1,8 +1,10 @@
 "use client";
 import { useState, useEffect } from "react";
-import { Loader2, Play, ExternalLink, CheckCircle2, AlertTriangle, Search, SlidersHorizontal, FlaskConical, Archive, Terminal, Zap } from "lucide-react";
+import { Loader2, Play, ExternalLink, CheckCircle2, AlertTriangle, Search, SlidersHorizontal, FlaskConical, Archive, Terminal, Zap, X } from "lucide-react";
 
 type CheckResult = { service: string; ok: boolean; message: string };
+type RunCost = { platform: string; pool: number; apifyUsd: number; tier1Calls: number; tier1Inr: number; tier2Calls: number; tier2Inr: number; synthRan: boolean; synthInr: number; cacheHits: number };
+type RunWarn = { stage: string; severity: "warn" | "block"; message: string; advice: string };
 
 export default function Dashboard() {
   const [keyword, setKeyword] = useState("magnesium gummies");
@@ -16,6 +18,8 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<"run" | "reports" | "help">("run");
   const [history, setHistory] = useState<Array<{file:string; keyword:string; platform:string; videos:number; date:string}>>([]);
   const [cacheStats, setCacheStats] = useState<{count:number} | null>(null);
+  const [runCosts, setRunCosts] = useState<RunCost[]>([]);
+  const [warns, setWarns] = useState<RunWarn[]>([]);
 
   async function handleCheckKeys() {
     setChecking(true);
@@ -31,6 +35,8 @@ export default function Dashboard() {
     setRunning(true);
     setRunLog([]);
     setReportLinks([]);
+    setRunCosts([]);
+    setWarns([]);
     const body = { keywords: keyword.split(",").map((s) => s.trim()).filter(Boolean), platform, count };
     try {
       const res = await fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
@@ -50,10 +56,12 @@ export default function Dashboard() {
             const evt = JSON.parse(line);
             if (evt.type === "log") setRunLog((l) => [...l, evt.message]);
             if (evt.type === "done") setReportLinks(evt.reports || []);
+            if (evt.type === "cost") setRunCosts((c) => [...c, evt as RunCost]);
+            if (evt.type === "warn" || evt.type === "error") setWarns((w) => [...w, evt as RunWarn]);
           } catch { setRunLog((l) => [...l, line]); }
         }
       }
-    } catch (e) { setRunLog((l) => [...l, `Error: ${String(e)}`]); }
+    } catch (e) { setWarns((w) => [...w, { stage: "network", severity: "block", message: "Couldn't reach the workflow.", advice: "Is the app still running? Try `npm run all` again." }]); }
     finally { setRunning(false); }
   }
 
@@ -257,8 +265,8 @@ export default function Dashboard() {
             )}
           </div>
           <div className="px-6 py-3 bg-secondary/50 border-t border-line flex items-center justify-between font-mono text-[10px] tracking-[0.06em] text-stone">
-            <span>© Manish Tiwari — WhyViral · Built with proof</span>
-            <span className="hidden sm:inline">LAB No. 002 · single command npm run all</span>
+            <span>© Manish Tiwari — WhyViral</span>
+            <span><a href="https://buildwithmanish.com" className="hover:underline">buildwithmanish.com</a></span>
           </div>
         </div>
 
@@ -288,27 +296,11 @@ export default function Dashboard() {
               <span className="flex items-center gap-1.5"><Archive className="h-3.5 w-3.5" /> LAST WALL — TIKTOK</span>
               <a href="/report/tiktok" className="text-ink hover:underline">Open wall →</a>
             </div>
-            <div className="mt-3 grid grid-cols-3 gap-2 font-mono text-[11px]">
-              <div className="rounded-[8px] border border-line p-3">
-                <div className="tracking-[0.08em] text-stone">FORMAT</div>
-                <div className="mt-1 font-medium">yap · 1</div>
-                <div className="mt-2 h-1 rounded-full bg-secondary overflow-hidden"><div className="h-full w-2/3 bg-amber" /></div>
-              </div>
-              <div className="rounded-[8px] border border-line p-3">
-                <div className="tracking-[0.08em] text-stone">HOOK</div>
-                <div className="mt-1 font-medium">problem callout</div>
-                <div className="mt-1 text-[10px] text-stone">V1 · close-up gummy</div>
-              </div>
-              <div className="rounded-[8px] bg-ink text-paper p-3">
-                <div className="tracking-[0.08em] opacity-60">BUILT BY</div>
-                <div className="mt-1 font-semibold">Manish Tiwari</div>
-                <div className="mt-1 text-[10px] opacity-60">for strategists</div>
-              </div>
-            </div>
+            <WallPreview platform="tiktok" />
           </div>
 
           <div className="rounded-[12px] border border-dashed border-line bg-paper p-4 font-mono text-[11px] leading-4 text-stone">
-            <span className="font-medium text-ink">Tip:</span> Run <span className="text-ink font-medium">npm run all</span> locally — UI :3000 and Mastra :4111 (concurrently). Or just <span className="text-ink font-medium">npm run dev</span> — workflow is already at <span className="text-ink">/api/run</span>.
+            <span className="font-medium text-ink">Tip:</span> Start with 5 videos on TikTok — cache hits make re-runs near-free. Cached videos auto-skip the AI cost.
           </div>
         </div>
       </div>
@@ -325,12 +317,55 @@ export default function Dashboard() {
           </div>
         </div>
         <div className="rounded-[12px] border border-line bg-white p-5">
-          <div className="font-mono text-[10px] tracking-[0.12em] text-stone flex items-center gap-1.5"><span className="h-1 w-6 bg-amber" /> COST ESTIMATOR — LOCAL</div>
-          <CostEstimator count={count} platform={platform} />
-          <div className="mt-4 rounded-[8px] border border-line bg-paper p-3 font-mono text-[11px] leading-4 text-stone">
-            <span className="font-medium text-ink">Demo without keys:</span> Keep mock <span className="text-ink">output/report-*.json</span> and open any wall — no API spend. To make it real, set <span className="text-ink">.env</span> then <span className="text-ink">Check Keys</span>.
-          </div>
+          <div className="font-mono text-[10px] tracking-[0.12em] text-stone flex items-center gap-1.5"><span className="h-1 w-6 bg-amber" /> {runCosts.length > 0 ? "ACTUAL COST" : "COST ESTIMATOR"}</div>
+          <CostEstimator count={count} platform={platform} liveCosts={runCosts.length > 0 ? runCosts : undefined} />
+          {warns.length > 0 && (
+            <div className="space-y-2 mt-3">
+              {warns.map((w, i) => (
+                <div key={i} className={`rounded-[8px] border p-3 ${w.severity === "block" ? "bg-red-50 border-red-200" : "bg-amber-50 border-amber-200"}`}>
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className={`h-3.5 w-3.5 shrink-0 mt-0.5 ${w.severity === "block" ? "text-red-600" : "text-amber-600"}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-mono text-[11px] font-medium">{w.message}</p>
+                      <p className="font-mono text-[10px] text-stone mt-1">{w.advice}</p>
+                    </div>
+                    <button onClick={() => setWarns((prev) => prev.filter((_, idx) => idx !== i))} className="text-stone hover:text-ink"><X className="h-3 w-3" /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {runCosts.length === 0 && (
+            <div className="mt-4 rounded-[8px] border border-line bg-paper p-3 font-mono text-[11px] leading-4 text-stone">
+              <span className="font-medium text-ink">Tip:</span> Add your API keys in <a href="/settings" className="text-ink underline">Settings</a>, then run a search. Cached videos make re-runs near-free.
+            </div>
+          )}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function WallPreview({ platform }: { platform: string }) {
+  const [data, setData] = useState<{ keyword: string; videos: unknown[]; patterns: { hook_type: { value: string }[] } | null } | null>(null);
+  useEffect(() => { fetch(`/api/report?platform=${platform}`).then(r => r.ok ? r.json() : null).then(j => setData(j)).catch(() => setData(null)); }, [platform]);
+  if (!data) return <div className="mt-3 rounded-[8px] border border-dashed border-line p-4 text-center font-mono text-[11px] text-stone">No wall yet — run a search to populate this.</div>;
+  if (!data.videos?.length) return <div className="mt-3 font-mono text-[11px] text-stone">Wall is empty — try increasing the target count.</div>;
+  const topHook = data.patterns?.hook_type?.[0]?.value || "—";
+  return (
+    <div className="mt-3 grid grid-cols-3 gap-2 font-mono text-[11px]">
+      <div className="rounded-[8px] border border-line p-3">
+        <div className="tracking-[0.08em] text-stone">TAPES</div>
+        <div className="mt-1 font-medium">{data.videos.length} analyzed</div>
+      </div>
+      <div className="rounded-[8px] border border-line p-3">
+        <div className="tracking-[0.08em] text-stone">TOP HOOK</div>
+        <div className="mt-1 font-medium truncate">{topHook}</div>
+      </div>
+      <div className="rounded-[8px] bg-ink text-paper p-3">
+        <div className="tracking-[0.08em] opacity-60">BUILT BY</div>
+        <div className="mt-1 font-semibold">Manish Tiwari</div>
+        <div className="mt-1 text-[10px] opacity-60">for strategists</div>
       </div>
     </div>
   );
@@ -338,11 +373,9 @@ export default function Dashboard() {
 
 function WallHistoryPreview() {
   const [runs, setRuns] = useState<Array<{file:string; keyword:string; platform:string; videos:number; date:string}> | null>(null);
-  useEffect(() => {
-    fetch("/api/history").then(r=>r.json()).then(j=> setRuns((j.runs||[]).slice(0,4))).catch(()=> setRuns([]));
-  }, []);
+  useEffect(() => { fetch("/api/history").then(r=>r.json()).then(j=> setRuns((j.runs||[]).slice(0,4))).catch(()=> setRuns([])); }, []);
   if (runs === null) return <div className="font-mono text-[12px] text-stone">Loading…</div>;
-  if (runs.length===0) return <div className="rounded-[8px] border border-dashed border-line bg-paper p-4 font-mono text-[12px] text-stone">No walls yet — run from the bench. Try <span className="text-ink font-medium">magnesium gummies</span> on TikTok.</div>;
+  if (runs.length===0) return <div className="rounded-[8px] border border-dashed border-line bg-paper p-4 font-mono text-[12px] text-stone">No walls yet — run a search to populate this.</div>;
   return (
     <div className="space-y-2">
       {runs.map(r=> (
@@ -360,24 +393,64 @@ function WallHistoryPreview() {
   );
 }
 
-function CostEstimator({ count, platform }: { count:number; platform:string }) {
-  const pool = Math.max(count*12, 300);
+function CostEstimator({ count, platform, liveCosts }: { count: number; platform: string; liveCosts?: RunCost[] }) {
+  // If the user has run live, show actual numbers; otherwise show pre-run estimate.
+  if (liveCosts && liveCosts.length > 0) {
+    const totals = liveCosts.reduce(
+      (acc, c) => ({
+        pool: acc.pool + c.pool,
+        apify: acc.apify + c.apifyUsd,
+        t1: acc.t1 + c.tier1Inr,
+        t2: acc.t2 + c.tier2Inr,
+        synth: acc.synth + c.synthInr,
+        cacheHits: acc.cacheHits + c.cacheHits,
+        legs: acc.legs + 1,
+      }),
+      { pool: 0, apify: 0, t1: 0, t2: 0, synth: 0, cacheHits: 0, legs: 0 }
+    );
+    const totalInr = totals.t1 + totals.t2 + totals.synth;
+    return (
+      <div className="mt-3 space-y-2 font-mono text-[11px]">
+        {liveCosts.map((c) => (
+          <div key={c.platform} className="rounded-[6px] bg-paper border border-line p-2 space-y-1">
+            <div className="text-stone text-[10px]">{c.platform.toUpperCase()} — {c.pool} pool</div>
+            {c.tier1Calls > 0 && <div className="flex justify-between"><span className="text-stone">Watched</span><span className="font-medium">₹{c.tier1Inr}{c.cacheHits > 0 ? ` (${c.cacheHits} cached)` : ""}</span></div>}
+            {c.tier2Calls > 0 && <div className="flex justify-between"><span className="text-stone">Deep pass</span><span className="font-medium">₹{c.tier2Inr}</span></div>}
+            {c.synthRan && <div className="flex justify-between"><span className="text-stone">Synthesis</span><span className="font-medium">₹{c.synthInr}</span></div>}
+            <div className="flex justify-between"><span className="text-stone">Apify</span><span className="font-medium">${c.apifyUsd.toFixed(2)}</span></div>
+          </div>
+        ))}
+        <div className="pt-2 mt-2 border-t border-dashed border-line flex justify-between font-medium text-ink">
+          <span>{totals.legs > 1 ? `×${totals.legs} platforms` : "Total"}</span>
+          <span>₹{totalInr} + ${totals.apify.toFixed(2)}</span>
+        </div>
+        {totals.cacheHits > 0 && (
+          <div className="rounded-[6px] bg-emerald-50 border border-emerald-200 p-2 text-[10px] text-emerald-700">
+            {totals.cacheHits} videos reused from cache — no AI cost.
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Pre-run estimate
+  const pool = Math.max(count * 12, 300);
   const apifyCost = pool * 0.0026;
   const tier1 = count * 2.5;
   const tier2 = Math.min(8, count) * 10;
   const synth = 18;
   const total = tier1 + tier2 + synth;
-  const byPlatform = platform==="all" ? total*3 : total;
+  const byPlatform = platform === "all" ? total * 3 : total;
   return (
     <div className="mt-3 space-y-2 font-mono text-[11px]">
-      <div className="flex justify-between"><span className="text-stone">Pool</span><span className="font-medium">{pool} videos · ${apifyCost.toFixed(2)} Apify</span></div>
-      <div className="flex justify-between"><span className="text-stone">Gemini Tier1</span><span className="font-medium">{count} × ₹2.5 ≈ ₹{tier1.toFixed(0)}</span></div>
-      <div className="flex justify-between"><span className="text-stone">Tier2 deep</span><span className="font-medium">{Math.min(8,count)} × ₹10 ≈ ₹{tier2.toFixed(0)}</span></div>
-      <div className="flex justify-between"><span className="text-stone">Synthesis</span><span className="font-medium">≈ ₹{synth}</span></div>
+      <div className="flex justify-between"><span className="text-stone">Pool</span><span className="font-medium">~{pool} videos · ${apifyCost.toFixed(2)}</span></div>
+      <div className="flex justify-between"><span className="text-stone">Watch</span><span className="font-medium">{count} × ₹2.5 ≈ ₹{tier1.toFixed(0)}</span></div>
+      <div className="flex justify-between"><span className="text-stone">Deep pass</span><span className="font-medium">{Math.min(8, count)} × ₹10 ≈ ₹{tier2.toFixed(0)}</span></div>
+      <div className="flex justify-between"><span className="text-stone">Synthesis</span><span className="font-medium">₹{synth}</span></div>
       <div className="pt-2 mt-2 border-t border-dashed border-line flex justify-between font-medium text-ink">
-        <span>Total {platform==="all" ? "×3 platforms" : ""}</span><span>≈ ₹{byPlatform.toFixed(0)} + ${ (platform==="all" ? apifyCost*3 : apifyCost).toFixed(2)}</span>
+        <span>Estimate {platform === "all" ? "×3 platforms" : ""}</span><span>₹{byPlatform.toFixed(0)} + ${(platform === "all" ? apifyCost * 3 : apifyCost).toFixed(2)}</span>
       </div>
-      <div className="text-[10px] leading-4 text-stone">Local, pay-as-you-go — no subscription. Cache in <span className="text-ink">output/analyses.json</span> saves re-watch.</div>
+      <div className="text-[10px] leading-4 text-stone">Local, pay-as-you-go — no subscription. Cached videos skip AI costs on re-run.</div>
     </div>
   );
 }
