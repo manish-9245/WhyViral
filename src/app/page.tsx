@@ -1,25 +1,60 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Loader2, Play, ExternalLink, CheckCircle2, AlertTriangle, Search, SlidersHorizontal, FlaskConical, Archive, Terminal, Zap, X } from "lucide-react";
+import { useState, useEffect, useCallback } from "react";
+import { Loader2, Play, ExternalLink, CheckCircle2, AlertTriangle, Search, SlidersHorizontal, FlaskConical, Archive, Terminal, Zap, X, RefreshCw, ChevronRight, Circle } from "lucide-react";
 
 type CheckResult = { service: string; ok: boolean; message: string };
 type RunCost = { platform: string; pool: number; apifyUsd: number; tier1Calls: number; tier1Inr: number; tier2Calls: number; tier2Inr: number; synthRan: boolean; synthInr: number; cacheHits: number };
 type RunWarn = { stage: string; severity: "warn" | "block"; message: string; advice: string };
+type Stage = "scrape" | "prescreen" | "watch" | "deep" | "synth";
+type StageStatus = "pending" | "running" | "done" | "failed" | "skipped";
+type PipelineData = {
+  platform: string;
+  stages: Stage[];
+  statuses: Record<Stage, StageStatus> | null;
+  state: { lastCompleted: Stage | null; failedAt: Stage | null; failureReason: string | null; updatedAt: string } | null;
+  reportMeta: { keyword: string; videoCount: number; date: string } | null;
+} | null;
+
+const STAGES: { id: Stage; label: string; hint: string }[] = [
+  { id: "scrape", label: "Scrape", hint: "Pull raw videos from the platform" },
+  { id: "prescreen", label: "Pre-screen", hint: "Filter by caption & language" },
+  { id: "watch", label: "Watch", hint: "AI watches each video" },
+  { id: "deep", label: "Deep pass", hint: "Tier-2 analysis on top winners" },
+  { id: "synth", label: "Synth", hint: "Cluster patterns into a wall" },
+];
 
 export default function Dashboard() {
-  const [keyword, setKeyword] = useState("magnesium gummies");
+  const [keyword, setKeyword] = useState("");
   const [platform, setPlatform] = useState<"tiktok" | "instagram" | "meta" | "all">("tiktok");
   const [count, setCount] = useState(5);
   const [checking, setChecking] = useState(false);
   const [checkResults, setCheckResults] = useState<CheckResult[] | null>(null);
   const [running, setRunning] = useState(false);
+  const [runStage, setRunStage] = useState<Stage | null>(null);
   const [runLog, setRunLog] = useState<string[]>([]);
   const [reportLinks, setReportLinks] = useState<string[]>([]);
   const [activeTab, setActiveTab] = useState<"run" | "reports" | "help">("run");
   const [history, setHistory] = useState<Array<{file:string; keyword:string; platform:string; videos:number; date:string}>>([]);
-  const [cacheStats, setCacheStats] = useState<{count:number} | null>(null);
   const [runCosts, setRunCosts] = useState<RunCost[]>([]);
   const [warns, setWarns] = useState<RunWarn[]>([]);
+  const [pipeline, setPipeline] = useState<PipelineData>(null);
+  const [resumeFrom, setResumeFrom] = useState<Stage | null>(null);
+
+  const fetchPipeline = useCallback(async () => {
+    try {
+      const res = await fetch(`/api/state?platform=${platform}`);
+      if (res.ok) setPipeline(await res.json());
+    } catch { setPipeline(null); }
+  }, [platform]);
+
+  useEffect(() => { fetchPipeline(); }, [fetchPipeline]);
+
+  // Refresh pipeline state while running
+  useEffect(() => {
+    if (!running) return;
+    const id = setInterval(fetchPipeline, 3000);
+    return () => clearInterval(id);
+  }, [running, fetchPipeline]);
 
   async function handleCheckKeys() {
     setChecking(true);
@@ -31,13 +66,18 @@ export default function Dashboard() {
     } catch (e) { setCheckResults([{ service: "error", ok: false, message: String(e) }]); }
     finally { setChecking(false); }
   }
-  async function handleRun() {
+  async function handleRun(opts?: { resume?: boolean; stage?: Stage; clearState?: boolean }) {
+    if (running) return;
     setRunning(true);
     setRunLog([]);
     setReportLinks([]);
     setRunCosts([]);
     setWarns([]);
-    const body = { keywords: keyword.split(",").map((s) => s.trim()).filter(Boolean), platform, count };
+    setRunStage(opts?.stage || null);
+    const body: Record<string, unknown> = { keywords: keyword.split(",").map((s) => s.trim()).filter(Boolean), platform, count };
+    if (opts?.resume) body.resume = true;
+    if (opts?.stage) body.stage = opts.stage;
+    if (opts?.clearState) body.clearState = true;
     try {
       const res = await fetch("/api/run", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
       if (!res.body) throw new Error("No stream");
@@ -58,11 +98,12 @@ export default function Dashboard() {
             if (evt.type === "done") setReportLinks(evt.reports || []);
             if (evt.type === "cost") setRunCosts((c) => [...c, evt as RunCost]);
             if (evt.type === "warn" || evt.type === "error") setWarns((w) => [...w, evt as RunWarn]);
+            if (evt.type === "state") fetchPipeline();
           } catch { setRunLog((l) => [...l, line]); }
         }
       }
-    } catch (e) { setWarns((w) => [...w, { stage: "network", severity: "block", message: "Couldn't reach the workflow.", advice: "Is the app still running? Try `npm run all` again." }]); }
-    finally { setRunning(false); }
+    } catch (e) { setWarns((w) => [...w, { stage: "network", severity: "block", message: "Couldn't reach the workflow.", advice: "Is the app still running? Restart it and try again." }]); }
+    finally { setRunning(false); setRunStage(null); fetchPipeline(); }
   }
 
   return (
@@ -188,8 +229,80 @@ export default function Dashboard() {
                   </div>
                 </div>
                 {platform==="instagram" && <div className="rounded-[8px] border border-amber/20 bg-amber/[0.08] p-3 font-mono text-[11px] leading-4">IG links expire in 24–48h — re-download may backfill from pool.</div>}
+
+                {/* ── Pipeline stage control ─────────────────────────────────── */}
+                <div className="rounded-[10px] border border-line bg-paper p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-mono text-[10px] tracking-[0.1em] text-stone">PIPELINE</span>
+                    <button onClick={fetchPipeline} className="text-stone hover:text-ink transition-colors" title="Refresh pipeline state"><RefreshCw className="h-3 w-3" /></button>
+                  </div>
+                  {/* Stage stepper */}
+                  <div className="flex items-center gap-0.5">
+                    {STAGES.map((s, i) => {
+                      const status = pipeline?.statuses?.[s.id] ?? "pending";
+                      const isRunning = running && runStage === s.id;
+                      const isFailed = status === "failed";
+                      const isDone = status === "done";
+                      const isPending = status === "pending";
+                      const dotColor = isRunning ? "bg-amber animate-pulse" : isFailed ? "bg-red-500" : isDone ? "bg-emerald-500" : "bg-stone/30";
+                      const textColor = isFailed ? "text-red-600" : isDone ? "text-emerald-700" : isRunning ? "text-amber-700" : "text-stone";
+                      return (
+                        <div key={s.id} className="flex items-center">
+                          <div className="flex flex-col items-center gap-1">
+                            <div className={`h-5 w-5 rounded-full flex items-center justify-center ${dotColor}`}>
+                              {isRunning ? <Loader2 className="h-3 w-3 animate-spin text-ink" /> : isDone ? <CheckCircle2 className="h-3 w-3 text-paper" /> : isFailed ? <AlertTriangle className="h-3 w-3 text-paper" /> : <Circle className="h-2 w-2 text-paper/40" />}
+                            </div>
+                            <span className={`font-mono text-[9px] tracking-wide ${textColor}`}>{s.label}</span>
+                            {!running && !isPending && !isFailed && (
+                              <button
+                                onClick={() => handleRun({ stage: s.id as Stage })}
+                                className="font-mono text-[8px] text-amber-600 hover:text-amber-800 transition-colors border border-amber-200 bg-amber-50 rounded px-1 py-0.5"
+                                title={`Run from ${s.label}`}
+                              >from here</button>
+                            )}
+                          </div>
+                          {i < STAGES.length - 1 && (
+                            <div className={`w-4 h-px mb-3 ${isDone ? "bg-emerald-400" : "bg-stone/20"}`} />
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Resume / clear controls */}
+                  {pipeline?.state && !running && (
+                    <div className="mt-3 flex items-center gap-2 flex-wrap">
+                      {(pipeline.state.failedAt || pipeline.state.lastCompleted) && (
+                        <button
+                          onClick={() => handleRun({ resume: true })}
+                          className="inline-flex items-center gap-1.5 h-7 rounded-[6px] bg-emerald-50 border border-emerald-200 text-emerald-700 font-mono text-[10px] px-2.5 hover:bg-emerald-100 transition-colors"
+                        >
+                          <RefreshCw className="h-3 w-3" /> Resume from {pipeline.state.lastCompleted || pipeline.state.failedAt}
+                        </button>
+                      )}
+                      <button
+                        onClick={() => handleRun({ clearState: true })}
+                        className="inline-flex items-center gap-1.5 h-7 rounded-[6px] bg-red-50 border border-red-200 text-red-600 font-mono text-[10px] px-2.5 hover:bg-red-100 transition-colors"
+                        title="Clear saved pipeline state and start fresh"
+                      >
+                        <X className="h-3 w-3" /> Clear state
+                      </button>
+                      {pipeline.state.failedAt && (
+                        <span className="font-mono text-[10px] text-red-600 truncate max-w-[140px]" title={pipeline.state.failureReason || ""}>
+                          Failed: {pipeline.state.failureReason || pipeline.state.failedAt}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {pipeline?.reportMeta && !running && (
+                    <div className="mt-2 font-mono text-[10px] text-stone">
+                      Last run: <span className="text-ink font-medium">{pipeline.reportMeta.keyword}</span> · {pipeline.reportMeta.videoCount} videos · {pipeline.reportMeta.date}
+                    </div>
+                  )}
+                </div>
+
                 <div className="flex gap-2 pt-2">
-                  <button onClick={handleRun} disabled={running} className="flex-1 h-11 inline-flex items-center justify-center gap-2 rounded-[8px] bg-amber text-ink font-mono text-[13px] font-semibold tracking-[0.04em] hover:bg-amber/90 disabled:opacity-50 transition-colors">
+                  <button onClick={() => handleRun()} disabled={running} className="flex-1 h-11 inline-flex items-center justify-center gap-2 rounded-[8px] bg-amber text-ink font-mono text-[13px] font-semibold tracking-[0.04em] hover:bg-amber/90 disabled:opacity-50 transition-colors">
                     {running ? <Loader2 className="h-4 w-4 animate-spin" /> : <Play className="h-4 w-4 fill-ink" />} {running ? "RUNNING…" : "RUN WORKFLOW"}
                   </button>
                   <button onClick={handleCheckKeys} disabled={checking} className="h-11 px-4 inline-flex items-center gap-1.5 rounded-[8px] border border-line bg-white font-mono text-[12px] font-medium hover:bg-secondary transition-colors">
