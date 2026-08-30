@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Crawl Evidence Archive — Ink bench + Paper log
+   THESIS: forensic archive, not SaaS dashboard
+   Palette: Ink #0a0a0b, Paper #fdfbf7, Stone #78716c, Amber #f59e0b, Vermillion #ef4444
+*/
+
+@layer base {
+  :root {
+    --background: 40 20% 96%; /* Paper #fdfbf7 */
+    --foreground: 0 0% 4%; /* Ink #0a0a0b */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 4%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 4%;
+    --primary: 38 92% 50%; /* Amber #f59e0b */
+    --primary-foreground: 0 0% 4%;
+    --secondary: 30 10% 94%; /* warm stone paper */
+    --secondary-foreground: 0 0% 4%;
+    --muted: 25 6% 90%;
+    --muted-foreground: 25 5% 45%; /* Stone #78716c tinted from paper, not gray */
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 84% 60%; /* Vermillion */
+    --destructive-foreground: 0 0% 98%;
+    --border: 30 6% 86%; /* line #e7e5e4 warm */
+    --input: 30 6% 86%;
+    --ring: 38 92% 50%;
+    --radius: 0.75rem; /* 12px cards, 8px chips via override */
+    --chart-1: 38 92% 50%;
+    --chart-2: 0 84% 60%;
+    --ink: 0 0% 4%;
+    --paper: 40 20% 96%;
+    --stone: 25 5% 45%;
+    --line: 30 6% 86%;
+    --amber: 38 92% 50%;
+  }
+  .dark {
+    --background: 0 0% 4%;
+    --foreground: 40 20% 96%;
+    --card: 0 0% 7%;
+    --card-foreground: 40 20% 96%;
+    --popover: 0 0% 7%;
+    --popover-foreground: 40 20% 96%;
+    --primary: 38 92% 50%;
+    --primary-foreground: 0 0% 4%;
+    --secondary: 0 0% 12%;
+    --secondary-foreground: 40 20% 96%;
+    --muted: 0 0% 12%;
+    --muted-foreground: 30 6% 62%;
+    --accent: 38 92% 50%;
+    --accent-foreground: 0 0% 4%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14%;
+    --input: 0 0% 14%;
+    --ring: 38 92% 50%;
+  }
+}
+@layer base {
+  * { @apply border-border; }
+  body { @apply bg-background text-foreground antialiased; font-feature-settings: "ss01" 1, "ss02" 1; }
+  /* Evidence log ruled lines */
+  .ruled { background-image: linear-gradient(to bottom, transparent 31px, hsl(var(--border)) 32px); background-size: 100% 32px; }
+  /* String board dashed */
+  .string { stroke: hsl(var(--stone)); stroke-width: 1.2; stroke-dasharray: 6 6; fill: none; }
+}
+/* Focus ring uses amber, not default */
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+}
