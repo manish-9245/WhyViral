@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Save, Eye, EyeOff, Trash2, Database, Settings, ChevronDown, Plug, AlertCircle, Loader2 } from "lucide-react";
+import { CheckCircle2, Eye, EyeOff, Trash2, Database, Settings, ChevronDown, Plug, AlertCircle, Loader2 } from "lucide-react";
 
 type Env = Record<string, string>;
 type Health = { ok: boolean; message: string; service: string }[];

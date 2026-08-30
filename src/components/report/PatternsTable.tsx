@@ -15,9 +15,9 @@ function Chip({ label, url, metric }: { label: string; url?: string; metric?: st
 }
 
 function ClusterCell({ cluster, videoMap }: { cluster: Record<string, unknown> | undefined; videoMap: Record<string, { url: string; metric: string }> }) {
+  const [open, setOpen] = useState(false);
   if (!cluster) return <td className="p-6 text-center font-mono text-[12px] text-stone">—</td>;
   const members = (cluster.members as Array<{ label: string; verbatim: string }>) || [];
-  const [open, setOpen] = useState(false);
   const placement = cluster.placement as string | undefined;
   return (
     <td className="align-top p-4 bg-white border border-line">

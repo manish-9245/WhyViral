@@ -58,7 +58,7 @@ export async function POST(req: NextRequest) {
   }
   if (changed===0) return NextResponse.json({ ok:false, error:"no valid keys" }, { status:400 });
   // Write back preserving comments
-  let original = existsSync(ENV_PATH) ? readFileSync(ENV_PATH, "utf8") : "";
+  const original = existsSync(ENV_PATH) ? readFileSync(ENV_PATH, "utf8") : "";
   const lines = original.split(/\r?\n/);
   const keysToWrite = new Set(Object.keys(updates).filter(k=>ALLOWED_KEYS.has(k)));
   const outLines: string[] = [];

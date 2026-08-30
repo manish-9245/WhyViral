@@ -1,24 +1,36 @@
-version: 1
+# Auto-label by changed paths (actions/labeler@v5)
+# See https://github.com/actions/labeler
 
-"src/app/api/**":
-  - "api"
-  - "backend"
+frontend:
+  - changed-files:
+      - any-glob-to-any-file: src/app/**/*
 
-"src/mastra/**":
-  - "pipeline"
-  - "backend"
+api:
+  - changed-files:
+      - any-glob-to-any-file: src/app/api/**/*
 
-"src/app/**":
-  - "frontend"
+pipeline:
+  - changed-files:
+      - any-glob-to-any-file: src/mastra/**/*
 
-"docs/**":
-  - "docs"
+backend:
+  - changed-files:
+      - any-glob-to-any-file:
+          - src/app/api/**/*
+          - src/mastra/**/*
 
-"*.md":
-  - "docs"
+docs:
+  - changed-files:
+      - any-glob-to-any-file:
+          - docs/**/*
+          - "*.md"
+          - .github/*.md
 
-".github/**":
-  - "ci"
+ci:
+  - changed-files:
+      - any-glob-to-any-file:
+          - .github/**/*
 
-"package.json":
-  - "deps"
+deps:
+  - changed-files:
+      - any-glob-to-any-file: package.json

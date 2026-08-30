@@ -59,7 +59,7 @@ export const scrapeStep = createStep({
   outputSchema: z.object({ pool: z.array(z.any()), candidates: z.array(z.any()), igSources: z.any().optional(), keywords: z.array(z.string()), keywordLabel: z.string() }),
   execute: async ({ inputData }) => {
     const { keywords: rawKeywords, platform, count, pool, rankBy, viewFloor, minLikes, language, country, regions, igHashtags, igAccounts, metaBrands, igDiscover, niche, testMode } = inputData;
-    let keywords = [...rawKeywords];
+    const keywords = [...rawKeywords];
     const keywordLabel = keywords.join(", ");
     const videosPath = `output/videos-${platform}.json`;
     const fullEffort = !testMode && count >= 30;

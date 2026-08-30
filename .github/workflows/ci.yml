@@ -22,8 +22,8 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run typecheck
-      - run: npx --no-install next lint --dir src
+      - run: npm run lint
       - run: npm run build
         env:
-          APIFY_TOKEN: ${{ secrets.APIFY_TOKEN || 'ci-stub' }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY || 'ci-stub' }}
+          APIFY_TOKEN: ci-stub
+          GEMINI_API_KEY: ci-stub

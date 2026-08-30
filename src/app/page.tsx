@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
-import { Loader2, Play, CheckCircle2, AlertTriangle, Search, SlidersHorizontal, ExternalLink, RefreshCw, X, ChevronDown, ChevronUp, Archive, Settings, BarChart3 } from "lucide-react";
+import { Loader2, Play, CheckCircle2, AlertTriangle, SlidersHorizontal, ExternalLink, RefreshCw, X, ChevronDown, ChevronUp, Archive, Settings } from "lucide-react";
 
 type Stage = "scrape" | "prescreen" | "watch" | "deep" | "synth";
 type StageStatus = "pending" | "running" | "done" | "failed" | "skipped";
@@ -57,7 +57,7 @@ export default function HomePage() {
   const [deepCount, setDeepCount] = useState(8);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [running, setRunning] = useState(false);
-  const [runStage, setRunStage] = useState<Stage | null>(null);
+  const [_runStage, setRunStage] = useState<Stage | null>(null);
   const [logOpen, setLogOpen] = useState(true);
   const [runLog, setRunLog] = useState<string[]>([]);
   const [reportLinks, setReportLinks] = useState<string[]>([]);

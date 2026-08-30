@@ -2,7 +2,7 @@
 // Mastra workflow = scrape → analyze → synthesize; streamed as NDJSON so the UI can tail logs.
 
 import { NextRequest } from "next/server";
-import { existsSync, mkdirSync, createWriteStream } from "node:fs";
+import { mkdirSync, createWriteStream } from "node:fs";
 import { scrapeTikTok, rankVideos } from "@/mastra/tools/scrape-tiktok";
 import { scrapeInstagram } from "@/mastra/tools/scrape-instagram";
 import { scrapeMeta, scrapeMetaBrands } from "@/mastra/tools/scrape-meta";
@@ -232,7 +232,7 @@ export async function POST(req: NextRequest) {
       try {
         for (const platform of platforms) {
           // Compute runKeywords (with auto-widening for full runs)
-          let runKeywords = [...keywords];
+          const runKeywords = [...keywords];
           const willKeywordSearch = platform === "tiktok" || (platform === "instagram" && !(Array.isArray(body.igHashtags) && body.igHashtags.length) && !(Array.isArray(body.igAccounts) && body.igAccounts.length));
           if (fullEffort && willKeywordSearch) {
             const want = Math.max(4, Math.min(12, Math.ceil(count / 12)));
@@ -353,7 +353,7 @@ export async function POST(req: NextRequest) {
           if (runStage && STAGES.indexOf(runStage) > 2) {
             log(`⏭  Skipping watch`);
           } else {
-            const { okVideos, okAnalyses, adaptableVideos, adaptableAnalyses, totalCacheHits } = await runWatch({
+            const { okVideos, okAnalyses, adaptableVideos, adaptableAnalyses } = await runWatch({
               platform, screened, count, cache, nicheFilter, nicheLabel, ai, model, passesLanguage, passesNiche, adaptableFloor, metaDaysFloor, cacheValid, send, log, fullEffort, concurrency: CONCURRENCY,
             });
             state.watch = { ok: okVideos.map((v, i) => ({ video: v, analysis: okAnalyses[i] })), adaptable: adaptableVideos.map((v, i) => ({ video: v, analysis: adaptableAnalyses[i] })) };
@@ -425,7 +425,6 @@ export async function POST(req: NextRequest) {
 
           // ── Live cost ──────────────────────────────────────────────────
           const deepActuallyRan = (state.deep?.tier2Ids?.length ?? 0);
-          const cacheHits = state.watch?.ok.filter((x) => false).length ?? 0; // approximate
           send({ type: "cost", platform, pool: fullPool.length, apifyUsd: Number((fullPool.length * 0.0026).toFixed(2)), tier1Calls: okVideos.length, tier1Inr: Math.round(okVideos.length * 2.5), tier2Calls: deepActuallyRan, tier2Inr: Math.round(deepActuallyRan * 10), synthRan: !!patterns, synthInr: patterns ? 18 : 0, cacheHits: 0 });
 
           await trackEvent("report_generated", { platform, referenceCount: allVids.length, patternsGenerated: patterns !== null, activation: allVids.length === count && patterns !== null });
