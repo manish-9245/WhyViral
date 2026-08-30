@@ -8,78 +8,98 @@
       <stop offset="0" stop-color="#f59e0b"/>
       <stop offset="1" stop-color="#fbbf24"/>
     </linearGradient>
+    <linearGradient id="viralFlame" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#f59e0b"/>
+      <stop offset="55%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#fde68a"/>
+    </linearGradient>
+    <linearGradient id="flameInner" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stop-color="#fbbf24"/>
+      <stop offset="100%" stop-color="#fff7cc"/>
+    </linearGradient>
     <linearGradient id="inkInk" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#0a0a0b"/>
-      <stop offset="100" stop-color="#1f1f23"/>
+      <stop offset="100%" stop-color="#1f1f23"/>
     </linearGradient>
-    <radialGradient id="glow" cx="0.18" cy="0.5" r="0.55">
-      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.35"/>
+    <radialGradient id="glow" cx="0.20" cy="0.5" r="0.60">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.32"/>
       <stop offset="1" stop-color="#f59e0b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="tileGlow" cx="0.5" cy="0.30" r="0.75">
+      <stop offset="0" stop-color="#f59e0b" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#f59e0b" stop-opacity="0"/>
     </radialGradient>
     <pattern id="grid" width="48" height="48" patternUnits="userSpaceOnUse">
       <path d="M 48 0 L 0 0 0 48" fill="none" stroke="#ffffff" stroke-opacity="0.04" stroke-width="1"/>
     </pattern>
+    <filter id="qGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3.2"/>
+      <feOffset dx="0" dy="3" result="off"/>
+      <feFlood flood-color="#f59e0b" flood-opacity="0.38"/>
+      <feComposite in2="off" operator="in" result="sh"/>
+      <feMerge><feMergeNode in="sh"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="flameGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="1.8"/>
+      <feFlood flood-color="#f59e0b" flood-opacity="0.55"/>
+      <feComposite in2="SourceAlpha" operator="in" result="sh"/>
+      <feMerge><feMergeNode in="sh"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
   </defs>
 
   <rect width="1280" height="640" fill="url(#bg)"/>
   <rect width="1280" height="640" fill="url(#grid)"/>
   <rect width="1280" height="640" fill="url(#glow)"/>
 
-  <!-- amber rule across top -->
   <rect x="0" y="0" width="1280" height="4" fill="url(#amber)"/>
 
-  <!-- logo tile: ink square + flame-question mark + amber pin + sparks -->
-  <g transform="translate(96, 230)">
-    <rect width="180" height="180" rx="28" fill="url(#inkInk)"/>
-
-    <!-- faint string-board grid -->
-    <g stroke="#ffffff" stroke-opacity="0.06" stroke-width="1">
-      <line x1="28" y1="40" x2="152" y2="40"/>
-      <line x1="28" y1="72" x2="152" y2="72"/>
-      <line x1="28" y1="108" x2="152" y2="108"/>
-      <line x1="28" y1="140" x2="152" y2="140"/>
+  <!-- Left tile 240x240 -->
+  <g transform="translate(96, 200)">
+    <rect width="240" height="240" rx="32" fill="url(#inkInk)"/>
+    <rect width="240" height="240" rx="32" fill="url(#tileGlow)"/>
+    <!-- grid -->
+    <g stroke="#ffffff" stroke-opacity="0.055" stroke-width="1">
+      <line x1="22" y1="36" x2="218" y2="36"/>
+      <line x1="22" y1="72" x2="218" y2="72"/>
+      <line x1="22" y1="114" x2="218" y2="114"/>
+      <line x1="22" y1="156" x2="218" y2="156"/>
+      <line x1="22" y1="192" x2="218" y2="192"/>
     </g>
-
-    <!-- Question mark — amber flame, scaled 2.8x from the 64x64 logo -->
-    <g transform="translate(28, 28) scale(2.0625)">
-      <path
-        d="M 22 18
-           C 19 21, 18 27, 22 33
-           C 25 37, 29 38, 30 39
-           L 30 42
-           C 30 42, 29 42, 29 44
-           C 29 47, 30 49, 32 49
-           C 34 49, 35 47, 35 44
-           C 35 42, 34 42, 34 42
-           L 34 39
-           C 36 37, 39 36, 41 33
-           C 46 27, 45 21, 42 18
-           C 40 16, 37 14, 32 13
-           C 28 12, 24 14, 22 18 Z"
-        fill="url(#amber)"/>
-      <circle cx="32" cy="52" r="3.6" fill="url(#amber)"/>
-      <circle cx="48" cy="12" r="1.6" fill="#fde68a"/>
-      <circle cx="52" cy="18" r="1.2" fill="#fbbf24" fill-opacity="0.8"/>
-      <circle cx="16" cy="14" r="1.2" fill="#fbbf24" fill-opacity="0.8"/>
+    <!-- flame cap above ? -->
+    <g transform="translate(120, 52)" filter="url(#flameGlow)">
+      <path d="M 0 -15 C -8.2 -3.2, -10.6 5.2, -5.6 13.2 C -2.0 8.6, 0.3 2.8, 0 -3.8 C 1.6 3.3, 4.1 8.6, 7.4 12.6 C 11.6 5.0, 10.0 -3.9, 0 -15 Z" fill="url(#viralFlame)" stroke="#fde68a" stroke-width="0.9" stroke-linejoin="round"/>
+      <path d="M 0 -5.6 C -3.6 0, -4.3 4.0, -2.0 7.6 C -0.5 4.8, 0.4 1.5, 0 -1.5 C 0.8 1.8, 1.8 4.8, 3.0 7.1 C 4.8 3.6, 4.3 -0.5, 0 -5.6 Z" fill="url(#flameInner)" fill-opacity="0.98"/>
     </g>
+    <!-- Proper "?" — Arial Bold traced -->
+    <path d="M128.67792032410534 134.4348413234301H110.08237677245106Q110.00945307224848 130.424037812289 110.00945307224848 129.5489534098582Q110.00945307224848 120.50641458474004 112.99932478055368 114.67251856853477Q115.98919648885888 108.83862255232951 124.95881161377447 101.54625253207293Q133.92842673869006 94.25388251181634 135.67859554355167 91.9932478055368Q138.37677245104658 88.41998649561107 138.37677245104658 84.11748818365969Q138.37677245104658 78.1377447670493 133.60027008777854 73.87170830519919Q128.82376772451047 69.60567184334909 120.72923700202566 69.60567184334909Q112.92640108035113 69.60567184334909 107.67589466576638 74.0540175557056Q102.42538825118164 78.50236326806213 100.45644834571236 87.61782579338285L81.64213369345038 85.28426738690074Q82.4442943956786 72.23092505064146 92.76299797434166 63.11546252532073Q103.08170155300473 54.0 119.85415259959487 54.0Q137.5016880486158 54.0 147.9297771775827 63.22484807562458Q158.35786630654962 72.44969615124916 158.35786630654962 84.70087778528021Q158.35786630654962 91.48278190411884 154.52937204591493 97.53544902093181Q150.70087778528023 103.58811613774478 138.1580013504389 114.01620526671168Q131.66779203241055 119.41255908170154 130.0999324780554 122.69412559081701Q128.5320729237002 125.97569209993247 128.67792032410534 134.4348413234301Z" fill="url(#viralFlame)" filter="url(#qGlow)"/>
+    <!-- Dot -->
+    <circle cx="120" cy="148" r="11" fill="url(#viralFlame)" filter="url(#qGlow)"/>
+    <circle cx="120" cy="148" r="4.2" fill="#fff7cc" fill-opacity="0.96"/>
+    <!-- Sparks -->
+    <circle cx="34" cy="28" r="3.2" fill="#fde68a" fill-opacity="0.95"/>
+    <circle cx="208" cy="32" r="2.4" fill="#fbbf24"/>
+    <circle cx="28" cy="202" r="2.2" fill="#fbbf24" fill-opacity="0.9"/>
+    <circle cx="212" cy="208" r="3.0" fill="#fde68a"/>
+    <circle cx="44" cy="18" r="1.6" fill="#fff7cc" fill-opacity="0.9"/>
+    <circle cx="200" cy="18" r="1.4" fill="#fff7cc" fill-opacity="0.85"/>
   </g>
 
   <!-- Wordmark -->
-  <g transform="translate(312, 240)">
-    <text x="0" y="60" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="120" font-weight="800" fill="#f5f1ea" letter-spacing="-4">WhyViral</text>
-    <text x="6" y="115" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="22" font-weight="500" fill="#f59e0b" letter-spacing="6">v1.0  ·  LOCAL-FIRST  ·  OPEN SOURCE</text>
+  <g transform="translate(380, 248)">
+    <text x="0" y="58" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="118" font-weight="800" fill="#f5f1ea" letter-spacing="-3.5">WhyViral</text>
+    <text x="4" y="104" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="21" font-weight="600" fill="#f59e0b" letter-spacing="6.5">v1.0  ·  LOCAL-FIRST  ·  OPEN SOURCE</text>
   </g>
 
   <!-- Tagline -->
-  <g transform="translate(312, 392)">
-    <text x="0" y="0" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="34" font-weight="600" fill="#f5f1ea">AI watches every video. Then tells you exactly why it worked.</text>
-    <text x="0" y="48" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="20" fill="#a8a29e">TikTok · Instagram · Meta  →  hooks, visuals, angles — pinned with proof links</text>
+  <g transform="translate(384, 398)">
+    <text x="0" y="0" font-family="ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif" font-size="33" font-weight="650" fill="#f5f1ea">AI watches every video. Then tells you exactly why it worked.</text>
+    <text x="0" y="46" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="19.5" fill="#a8a29e">TikTok · Instagram · Meta  →  hooks, visuals, angles — pinned with proof links</text>
   </g>
 
-  <!-- Footer band -->
-  <g transform="translate(0, 568)">
+  <!-- Footer -->
+  <g transform="translate(0, 586)">
     <line x1="96" y1="0" x2="1184" y2="0" stroke="#ffffff" stroke-opacity="0.08"/>
-    <text x="96" y="36" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#a8a29e">github.com/manish-9245/WhyViral</text>
-    <text x="1184" y="36" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="18" fill="#f59e0b">by Manish Tiwari</text>
+    <text x="96" y="30" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="17" fill="#a8a29e">github.com/manish-9245/WhyViral</text>
+    <text x="1184" y="30" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, monospace" font-size="17" fill="#f59e0b">by Manish Tiwari — buildwithmanish.com</text>
   </g>
 </svg>
