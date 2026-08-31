@@ -3,7 +3,7 @@
 
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { runActor, apifyTokens } from "../lib/apify";
+import { runActor, getScraperProvider, isApifyConfigured, describeProvider } from "../lib/scraper";
 import { detectCommentBait } from "./scrape-tiktok";
 import type { Video } from "../../lib/types";
 
@@ -80,7 +80,10 @@ export async function scrapeInstagram(
   sources: { keywords?: string[]; hashtags?: string[]; accounts?: string[] },
   { count = 5, pool, newerThan = "90 days" }: { count?: number; pool?: number; newerThan?: string } = {}
 ): Promise<{ pool: Video[]; poolCount: number; raw: unknown[] }> {
-  if (!apifyTokens().length) throw new Error("No APIFY_TOKEN found in your .env file.");
+  const provider = getScraperProvider();
+  if (provider === "apify" && !isApifyConfigured()) throw new Error("APIFY_TOKEN missing — set it in .env or use SCRAPER_PROVIDER=crawlee (open-source, no token).");
+  if (provider !== "apify" && !isApifyConfigured()) console.log(`   🕷️  Using ${describeProvider()} — IG fetch stays under 30 req/min (anti-ban)`);
+  else console.log(`   🕷️  Provider: ${describeProvider()}`);
   const keywords = (sources.keywords || []).filter(Boolean);
   const hashtags = (sources.hashtags || []).filter(Boolean);
   const accounts = (sources.accounts || []).filter(Boolean);

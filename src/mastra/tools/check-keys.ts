@@ -5,13 +5,42 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { ApifyClient } from "apify-client";
 import { makeClient, isVertex } from "../lib/genai";
-import { apifyTokens } from "../lib/apify";
+import { apifyTokens, getScraperProvider, describeProvider } from "../lib/scraper";
 
 export async function checkKeys() {
   const results: { service: string; ok: boolean; message: string }[] = [];
+  const provider = getScraperProvider();
+  results.push({ service: "scraper", ok: true, message: `Provider: ${describeProvider()} (SCRAPER_PROVIDER=${provider})` });
+
+  // Crawlee (open-source) — always OK if provider is crawlee/auto; it needs no token and is ban-safe
+  if (provider === "crawlee" || provider === "auto") {
+    const proxy = process.env.CRAWLEE_PROXY ? ` via proxy` : "";
+    const stealth = String(process.env.CRAWLEE_STEALTH ?? "true").toLowerCase() !== "false" ? "stealth on" : "stealth off";
+    const concurrency = process.env.CRAWLEE_MAX_CONCURRENCY || "1";
+    results.push({
+      service: "crawlee",
+      ok: true,
+      message: `OK — open-source, $0/run, anti-ban: jitter + concurrency=${concurrency} + ${stealth}${proxy} (no token needed)`,
+    });
+    // Probe TikWM availability (light check, no ban risk)
+    try {
+      const r = await fetch("https://www.tikwm.com/api/feed/search", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ keywords: "test", count: "1", cursor: "0", HD: "1" }).toString(),
+        signal: AbortSignal.timeout(8000),
+      });
+      if (r.ok) results.push({ service: "crawlee/tikwm", ok: true, message: "TikWM cache reachable — TikTok search will not hit tiktok.com directly" });
+      else results.push({ service: "crawlee/tikwm", ok: true, message: `TikWM HTTP ${r.status} — will use Playwright fallback (still safe)` });
+    } catch (e) {
+      results.push({ service: "crawlee/tikwm", ok: true, message: `TikWM probe: ${(e as Error).message.slice(0, 80)} — Playwright fallback available` });
+    }
+  }
+
   const tokens = apifyTokens();
   if (!tokens.length) {
-    results.push({ service: "apify", ok: false, message: "No APIFY_TOKEN in .env" });
+    if (provider === "apify") results.push({ service: "apify", ok: false, message: "No APIFY_TOKEN in .env — required when SCRAPER_PROVIDER=apify" });
+    else results.push({ service: "apify", ok: true, message: "No APIFY_TOKEN — OK (Crawlee is primary, Apify is optional fallback)" });
   } else {
     let totalLeft = 0;
     let anyRejected = false;

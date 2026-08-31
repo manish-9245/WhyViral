@@ -70,8 +70,8 @@ export default function SettingsPage() {
         if (v && !v.includes("•")) body[k] = v;
       }
     }
-    // Also include select-driven run defaults
-    const selectKeys = ["VIDEO_COUNT", "RANK_BY", "VIEW_FLOOR", "LANGUAGE", "COUNTRY", "DEEP_COUNT"];
+    // Also include select-driven run defaults + scraper provider
+    const selectKeys = ["VIDEO_COUNT", "RANK_BY", "VIEW_FLOOR", "LANGUAGE", "COUNTRY", "DEEP_COUNT", "SCRAPER_PROVIDER", "CRAWLEE_MAX_CONCURRENCY", "CRAWLEE_WITH_BROWSER"];
     for (const k of selectKeys) {
       if (env[k] !== undefined) body[k] = env[k];
     }
@@ -182,17 +182,65 @@ export default function SettingsPage() {
           </div>
         </div>
 
+        {/* Scraper provider — anti-ban safe by default */}
+        <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
+          <div className="h-10 px-5 flex items-center justify-between border-b border-stone/10">
+            <div className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-stone/60">
+              <Plug className="h-3.5 w-3.5" /> SCRAPER PROVIDER
+            </div>
+            <span className="font-mono text-[10px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">anti-ban: jitter + 1 concurrency</span>
+          </div>
+          <div className="p-5 grid sm:grid-cols-2 gap-4">
+            <SelectField
+              label="PROVIDER (see docs/scraper-provider.md)"
+              value={env.SCRAPER_PROVIDER || "auto"}
+              options={[
+                ["auto","auto — Crawlee + Apify fallback (recommended)"],
+                ["crawlee","crawlee — 100% open-source, $0"],
+                ["apify","apify — hosted only"],
+              ]}
+              onChange={(v) => setEnv({ ...env, SCRAPER_PROVIDER: v })}
+            />
+            <SelectField
+              label="ANTI-BAN CONCURRENCY"
+              value={env.CRAWLEE_MAX_CONCURRENCY || "1"}
+              options={[["1","1 — stealthiest (default)"],["2","2 — needs proxy"],["3","3 — high risk"]]}
+              onChange={(v) => setEnv({ ...env, CRAWLEE_MAX_CONCURRENCY: v })}
+            />
+          </div>
+          <div className="px-5 pb-3 grid sm:grid-cols-2 gap-4">
+            <Field k="CRAWLEE_PROXY" label="CRAWLEE_PROXY (optional)" placeholder="http://user:pass@host:port" />
+            <div className="flex flex-col justify-end">
+              <p className="font-mono text-[11px] leading-4 text-stone/60">
+                Crawlee uses TikWM cache for TikTok (no direct hits) and adds jitter + Retry-After handling for IG/Meta. Keep concurrency at <span className="text-ink font-semibold">1</span> without a proxy to avoid bans.
+              </p>
+            </div>
+          </div>
+          <div className="px-5 pb-5 flex gap-2">
+            <label className="flex items-center gap-2 font-mono text-[11px] text-stone cursor-pointer">
+              <input type="checkbox" checked={(env.CRAWLEE_WITH_BROWSER || "true") === "true"} onChange={(e) => setEnv({ ...env, CRAWLEE_WITH_BROWSER: e.target.checked ? "true" : "false" })} className="h-3.5 w-3.5 rounded border-stone/30" />
+              Browser fallback (Playwright)
+            </label>
+            <span className="font-mono text-[10px] text-stone/40 ml-2 self-center">off = fetch-only, safest for IG</span>
+          </div>
+        </div>
+
         {/* API Keys */}
         <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
           <div className="h-10 px-5 flex items-center gap-2 border-b border-stone/10 font-mono text-[11px] tracking-wider text-stone/60">
             <Settings className="h-3.5 w-3.5" /> API KEYS
           </div>
           <div className="p-5 grid sm:grid-cols-2 gap-4">
-            <Field k="APIFY_TOKEN" label="APIFY_TOKEN" placeholder="apify_api_…" />
+            <Field k="APIFY_TOKEN" label="APIFY_TOKEN (optional with Crawlee)" placeholder="apify_api_…" />
             <Field k="GEMINI_API_KEY" label="GEMINI_API_KEY" placeholder="AIza…" />
           </div>
           <div className="px-5 pb-5">
             <Field k="GEMINI_MODEL" label="GEMINI_MODEL (optional)" placeholder="gemini-3.5-flash" />
+          </div>
+          <div className="px-5 pb-4">
+            <p className="font-mono text-[11px] leading-4 text-stone/50">
+              When <span className="text-stone font-medium">SCRAPER_PROVIDER=crawlee</span> you can leave <span className="text-stone font-medium">APIFY_TOKEN</span> empty — local Crawlee is $0 and ban-safe (TikWM cache + jitter). Keep a token only if you want <span className="text-stone font-medium">auto</span> fallback.
+            </p>
           </div>
         </div>
 

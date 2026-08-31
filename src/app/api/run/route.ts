@@ -15,6 +15,7 @@ import { makeClient, isVertex } from "@/mastra/lib/genai";
 import { loadCache, saveCache, cacheValid, tierOf } from "@/mastra/lib/cache";
 import { trackEvent } from "@/mastra/lib/telemetry";
 import { loadState, saveState, newState, nextStage, type RunState, type Stage, STAGES } from "@/mastra/lib/state";
+import { estimateApifyCostUsd, getScraperProvider } from "@/mastra/lib/scraper";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -425,7 +426,8 @@ export async function POST(req: NextRequest) {
 
           // ── Live cost ──────────────────────────────────────────────────
           const deepActuallyRan = (state.deep?.tier2Ids?.length ?? 0);
-          send({ type: "cost", platform, pool: fullPool.length, apifyUsd: Number((fullPool.length * 0.0026).toFixed(2)), tier1Calls: okVideos.length, tier1Inr: Math.round(okVideos.length * 2.5), tier2Calls: deepActuallyRan, tier2Inr: Math.round(deepActuallyRan * 10), synthRan: !!patterns, synthInr: patterns ? 18 : 0, cacheHits: 0 });
+          const isLocal = getScraperProvider() !== "apify";
+          send({ type: "cost", platform, pool: fullPool.length, apifyUsd: isLocal ? 0 : estimateApifyCostUsd(fullPool.length), tier1Calls: okVideos.length, tier1Inr: Math.round(okVideos.length * 2.5), tier2Calls: deepActuallyRan, tier2Inr: Math.round(deepActuallyRan * 10), synthRan: !!patterns, synthInr: patterns ? 18 : 0, cacheHits: 0 });
 
           await trackEvent("report_generated", { platform, referenceCount: allVids.length, patternsGenerated: patterns !== null, activation: allVids.length === count && patterns !== null });
           reports.push(`output/report-${platform}.json`);

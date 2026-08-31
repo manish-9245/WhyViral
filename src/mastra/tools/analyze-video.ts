@@ -6,7 +6,7 @@ import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { readFileSync, writeFileSync, mkdirSync, rmSync } from "node:fs";
 import { GoogleGenAI, createUserContent, createPartFromUri, Type } from "@google/genai";
-import { runActor, currentToken } from "../lib/apify";
+import { runActor, currentToken } from "../lib/scraper";
 import { isVertex, adcToken, makeClient, DEFAULT_MODEL } from "../lib/genai";
 import type { Video, Analysis } from "../../lib/types";
 
