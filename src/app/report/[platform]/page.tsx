@@ -34,10 +34,10 @@ function loadReport(platform: string): ArchiveReport | null {
 
 export default async function ReportPage({ params }: { params: Promise<{ platform: string }> }) {
   const { platform } = await params;
-  const allowed = ["tiktok", "instagram", "meta"];
+  const allowed = ["tiktok", "instagram", "meta", "youtube", "twitter", "pinterest", "reddit", "linkedin", "snapchat"];
   if (!allowed.includes(platform)) return (
     <div className="min-h-screen bg-[#f8f7f4] flex items-center justify-center">
-      <div className="text-center font-mono text-[13px] text-stone">Unknown platform "{platform}" — use tiktok, instagram, or meta.</div>
+      <div className="text-center font-mono text-[13px] text-stone">Unknown platform "{platform}" — use {allowed.join(", ")}.</div>
     </div>
   );
 

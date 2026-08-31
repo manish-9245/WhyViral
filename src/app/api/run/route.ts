@@ -6,6 +6,12 @@ import { mkdirSync, createWriteStream } from "node:fs";
 import { scrapeTikTok, rankVideos } from "@/mastra/tools/scrape-tiktok";
 import { scrapeInstagram } from "@/mastra/tools/scrape-instagram";
 import { scrapeMeta, scrapeMetaBrands } from "@/mastra/tools/scrape-meta";
+import { scrapeYoutube } from "@/mastra/tools/scrape-youtube";
+import { scrapeTwitter } from "@/mastra/tools/scrape-twitter";
+import { scrapePinterest } from "@/mastra/tools/scrape-pinterest";
+import { scrapeReddit } from "@/mastra/tools/scrape-reddit";
+import { scrapeLinkedin } from "@/mastra/tools/scrape-linkedin";
+import { scrapeSnapchat } from "@/mastra/tools/scrape-snapchat";
 import { discoverInstagram, confirmDiscovery } from "@/mastra/tools/discover-instagram";
 import { deriveBrands, deriveKeywords } from "@/mastra/tools/derive";
 import { prescreenCaptions } from "@/mastra/tools/prescreen";
@@ -75,6 +81,8 @@ function checkNiche(a: import("@/lib/types").Analysis, nicheFilter: string): boo
   return nicheFilter === "loose" ? m !== "off" : m === "core";
 }
 
+const ALL_PLATFORMS = ["tiktok", "instagram", "meta", "youtube", "twitter", "pinterest", "reddit", "linkedin", "snapchat"] as const;
+
 async function runScrape(
   platform: string,
   runKw: string[],
@@ -103,6 +111,24 @@ async function runScrape(
       const r = await scrapeMeta(runKw, { count, pool, country: metaCountries });
       return [r.pool, undefined];
     }
+  } else if (platform === "youtube") {
+    const r = await scrapeYoutube(runKw, { count, pool, rankBy, viewFloor: Math.min(viewFloor, 5000), language });
+    return [r.pool, undefined];
+  } else if (platform === "twitter") {
+    const r = await scrapeTwitter(runKw, { count, pool, rankBy, viewFloor: 0 });
+    return [r.pool, undefined];
+  } else if (platform === "pinterest") {
+    const r = await scrapePinterest(runKw, { count, pool, rankBy });
+    return [r.pool, undefined];
+  } else if (platform === "reddit") {
+    const r = await scrapeReddit(runKw, { count, pool, rankBy });
+    return [r.pool, undefined];
+  } else if (platform === "linkedin") {
+    const r = await scrapeLinkedin(runKw, { count, pool });
+    return [r.pool, undefined];
+  } else if (platform === "snapchat") {
+    const r = await scrapeSnapchat(runKw, { count, pool });
+    return [r.pool, undefined];
   } else {
     const regions = (body.regions as string[]) || (fullEffort ? ["US", "GB", "AU", "IN", "CA"] : [country]);
     const r = await scrapeTikTok(runKw, { count, pool, rankBy, viewFloor, minLikes, language, country, regions });
@@ -112,6 +138,12 @@ async function runScrape(
 
 async function buildCandidates(platform: string, fullPool: import("@/lib/types").Video[], opts: { rankBy: string; viewFloor: number; language: string; metaDaysFloor: number }): Promise<import("@/lib/types").Video[]> {
   if (platform === "meta") return (await import("@/mastra/tools/scrape-meta")).rankAds(fullPool, { daysFloor: opts.metaDaysFloor, count: Number.MAX_SAFE_INTEGER });
+  if (platform === "youtube") return (await import("@/mastra/tools/scrape-youtube")).rankYoutube(fullPool, { rankBy: opts.rankBy, viewFloor: Math.min(opts.viewFloor, 5000), count: Number.MAX_SAFE_INTEGER, language: opts.language });
+  // twitter/pinterest/reddit/linkedin/snapchat use generic top-N by engagement (light filtering)
+  if (["twitter", "pinterest", "reddit", "linkedin", "snapchat"].includes(platform)) {
+    const floor = platform === "youtube" ? Math.min(opts.viewFloor, 5000) : platform === "reddit" ? 0 : 0;
+    return fullPool.filter((v) => v.views >= floor).sort((a, b) => b.weightedEngagementRate - a.weightedEngagementRate).slice(0, Number.MAX_SAFE_INTEGER);
+  }
   return rankVideos(fullPool, { rankBy: opts.rankBy, viewFloor: opts.viewFloor, count: Number.MAX_SAFE_INTEGER, language: opts.language });
 }
 
@@ -191,7 +223,7 @@ export async function POST(req: NextRequest) {
   const resumeMode: boolean = !!body.resume;
   const clearBeforeRun: boolean = !!body.clearState;
   const runStage: Stage | null = STAGES.includes(body.stage as Stage) ? (body.stage as Stage) : null;
-  const platforms = platformFlag === "all" ? ["tiktok","instagram","meta"] as const : [platformFlag as "tiktok"|"instagram"|"meta"];
+  const platforms = platformFlag === "all" ? [...ALL_PLATFORMS] as unknown as typeof ALL_PLATFORMS : [platformFlag as typeof ALL_PLATFORMS[number]];
 
   const rankBy = String(body.rankBy || process.env.RANK_BY || "engagement");
   const viewFloor = Number(body.viewFloor || process.env.VIEW_FLOOR || 100_000);

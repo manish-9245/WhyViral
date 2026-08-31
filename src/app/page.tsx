@@ -46,9 +46,10 @@ function StageDot({ status, label, onRerun }: { status: StageStatus; label: stri
   );
 }
 
+export type PlatformId = "tiktok" | "instagram" | "meta" | "youtube" | "twitter" | "pinterest" | "reddit" | "linkedin" | "snapchat" | "all";
 export default function HomePage() {
   const [keyword, setKeyword] = useState("");
-  const [platform, setPlatform] = useState<"tiktok" | "instagram" | "meta" | "all">("tiktok");
+  const [platform, setPlatform] = useState<PlatformId>("tiktok");
   const [count, setCount] = useState(5);
   const [viewFloor, setViewFloor] = useState(100000);
   const [rankBy, setRankBy] = useState<"engagement" | "reach" | "views">("engagement");
@@ -196,13 +197,18 @@ export default function HomePage() {
 
             {/* Platform */}
             <div>
-              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider">PLATFORM</div>
-              <div className="flex rounded-lg border border-stone/20 overflow-hidden">
-                {([["tiktok","TikTok"],["instagram","IG"],["meta","Meta"],["all","All"]] as const).map(([val, label]) => (
+              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider">PLATFORM — all 9 + all</div>
+              <div className="flex flex-wrap gap-1 max-w-[420px]">
+                {([
+                  ["tiktok","TikTok"],["instagram","IG"],["meta","Meta"],
+                  ["youtube","YT Shorts"],["twitter","X"],["pinterest","Pin"],
+                  ["reddit","Reddit"],["linkedin","LI"],["snapchat","Snap"],
+                  ["all","All ✨"],
+                ] as const).map(([val, label]) => (
                   <button
                     key={val}
-                    onClick={() => setPlatform(val)}
-                    className={`h-10 px-3 font-mono text-[11px] transition-colors ${platform === val ? "bg-ink text-white" : "bg-white text-stone hover:bg-stone-50"}`}
+                    onClick={() => setPlatform(val as PlatformId)}
+                    className={`h-7 px-2.5 rounded-full border font-mono text-[11px] transition-colors ${platform === val ? "bg-ink text-white border-ink" : "bg-white text-stone border-stone/20 hover:bg-stone-50"}`}
                   >{label}</button>
                 ))}
               </div>

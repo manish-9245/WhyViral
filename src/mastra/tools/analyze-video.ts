@@ -219,9 +219,43 @@ async function generateWithRetry(ai: GoogleGenAI, params: Record<string, unknown
 
 async function resolveShopPlayUrl(pageUrl: string): Promise<string> {
   if (!currentToken() || !pageUrl) return "";
-  const { items } = await runActor("happy_b/tiktok-video-scraper", { videoUrls: [pageUrl] } as Record<string, unknown>);
-  const v = (items[0] as Record<string, string>) || {};
-  return v.videoPlayUrl || v.videoDownloadNoWatermarkUrl || v.videoDownloadUrl || "";
+  try {
+    const { items } = await runActor("happy_b/tiktok-video-scraper", { videoUrls: [pageUrl] } as Record<string, unknown>);
+    const v = (items[0] as Record<string, string>) || {};
+    return v.videoPlayUrl || v.videoDownloadNoWatermarkUrl || v.videoDownloadUrl || "";
+  } catch { return ""; }
+}
+
+async function resolveYoutubePlayUrl(pageUrl: string, videoId: string | null): Promise<string> {
+  const id = videoId || pageUrl.match(/(?:v=|shorts\/|youtu\.be\/)([A-Za-z0-9_-]{6,12})/)?.[1] || "";
+  if (!id) return "";
+  // Try Piped (public Invidious alternative) — no API key, low ban risk
+  const pipedInstances = ["https://pipedapi.kavin.rocks", "https://api.piped.private.coffee"];
+  for (const base of pipedInstances) {
+    try {
+      const r = await fetch(`${base}/streams/${id}`, { headers: { "User-Agent": "Mozilla/5.0" }, signal: AbortSignal.timeout(10000) });
+      if (!r.ok) continue;
+      const j = (await r.json()) as { videoStreams?: { url: string; quality: string; mimeType: string }[]; hls?: string };
+      const best = j.videoStreams?.filter((s) => s.mimeType.includes("mp4")).sort((a, b) => b.quality.localeCompare(a.quality))[0];
+      if (best?.url) return best.url;
+      if (j.hls) return j.hls;
+    } catch { /* try next */ }
+  }
+  // Fallback: try to extract from YouTube watch page's ytInitialPlayerResponse (no key, public)
+  try {
+    const r = await fetch(`https://www.youtube.com/watch?v=${id}`, { headers: { "User-Agent": "Mozilla/5.0", "Accept-Language": "en-US,en;q=0.9" }, signal: AbortSignal.timeout(10000) });
+    if (r.ok) {
+      const html = await r.text();
+      const m = html.match(/ytInitialPlayerResponse\s*=\s*(\{.+?\});/s);
+      if (m) {
+        const pr = JSON.parse(m[1]) as Record<string, unknown>;
+        const streaming = (pr.streamingData as Record<string, unknown>)?.formats as { url?: string; mimeType?: string }[] | undefined;
+        const url = streaming?.find((f) => f.mimeType?.includes("mp4"))?.url;
+        if (url) return url;
+      }
+    }
+  } catch { /* ignore */ }
+  return "";
 }
 
 export async function analyzeVideo(
@@ -238,11 +272,25 @@ export async function analyzeVideo(
     try { bytes = await downloadVideo(video.videoUrl, localPath); downloaded = true; } catch { /* fallback */ }
   }
   if (!downloaded) {
-    if (!/tiktok\.com/i.test(video.url || "")) throw new Error("no downloadable video (Instagram link expired or missing)");
-    console.log("   normal download unavailable, trying Shop-video fallback...");
-    const playUrl = await resolveShopPlayUrl(video.url);
-    if (!playUrl) throw new Error("no downloadable video (including Shop fallback)");
-    bytes = await downloadVideo(playUrl, localPath);
+    // Platform-aware fallback — YouTube via Piped, TikTok via shop resolver, others give clear message
+    if (/youtu\.?be/i.test(video.url || "") || video.platform === "youtube") {
+      console.log("   normal download unavailable, trying YouTube Piped fallback...");
+      const playUrl = await resolveYoutubePlayUrl(video.url || video.videoUrl || "", video.id || null);
+      if (!playUrl) throw new Error("no downloadable video (YouTube — try YOUTUBE_API_KEY or check Piped availability)");
+      bytes = await downloadVideo(playUrl, localPath);
+    } else if (/tiktok\.com/i.test(video.url || "")) {
+      console.log("   normal download unavailable, trying Shop-video fallback...");
+      const playUrl = await resolveShopPlayUrl(video.url);
+      if (!playUrl) throw new Error("no downloadable video (including Shop fallback)");
+      bytes = await downloadVideo(playUrl, localPath);
+    } else if (video.platform === "reddit" || video.platform === "pinterest" || video.platform === "twitter") {
+      // Reddit/Twitter/Pinterest videoUrl is already direct mp4 — if it failed, link expired
+      throw new Error(`no downloadable video (${video.platform} link expired or requires auth)`);
+    } else if (video.platform === "linkedin" || video.platform === "snapchat") {
+      throw new Error(`no downloadable video (${video.platform} is auth-walled — expected, will skip)`);
+    } else {
+      throw new Error("no downloadable video (Instagram link expired or missing)");
+    }
   }
   console.log(`   downloaded ${((bytes as number) / 1_000_000).toFixed(1)} MB`);
 

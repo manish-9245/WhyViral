@@ -1,11 +1,12 @@
-// src/mastra/lib/scraper.ts — Unified scraper provider
+// src/mastra/lib/scraper.ts — Unified scraper provider (all 9 platforms)
 // Open-source replacement for Apify. Crawlee (https://crawlee.dev) is the OSS engine
 // that powers Apify cloud — this module makes it the default while keeping Apify
-// as an optional fallback during migration.
-//
+// as an optional fallback during migration. Supports 9 platforms:
+//   tiktok, instagram, meta (Facebook Ads), youtube (Shorts), twitter/X,
+//   pinterest, reddit, linkedin, snapchat — all via Crawlee ban-safe providers.
 // Provider selection via env SCRAPER_PROVIDER:
 //   - "crawlee" → always use local Crawlee/fetch scrapers (zero cost, self-hosted)
-//   - "apify"   → always use hosted Apify Actors (requires APIFY_TOKEN)
+//   - "apify"   → always use hosted Apify Actors (requires APIFY_TOKEN, only tiktok/ig/meta)
 //   - "auto"    → try Crawlee first, fall back to Apify on failure (default)
 // Set SCRAPER_PROVIDER=crawlee to go fully open-source.
 // Docs: docs/scraper-provider.md
@@ -149,6 +150,37 @@ async function runCrawleeActor(
   if (actorId === "happy_b/tiktok-video-scraper") {
     const { runTikTokResolverCrawlee } = await import("./providers/crawlee-tiktok");
     const items = await runTikTokResolverCrawlee(actorId, input);
+    return { items, run: { defaultDatasetId: `local-crawlee-${Date.now()}` } };
+  }
+  // ── New all-platform local actors (no Apify equivalent — Crawlee-only) ──
+  if (actorId === "local/youtube-shorts" || actorId === "local/youtube") {
+    const { runYoutubeCrawlee } = await import("./providers/crawlee-youtube");
+    const items = await runYoutubeCrawlee(actorId, input);
+    return { items, run: { defaultDatasetId: `local-crawlee-${Date.now()}` } };
+  }
+  if (actorId === "local/twitter" || actorId === "local/x") {
+    const { runTwitterCrawlee } = await import("./providers/crawlee-twitter");
+    const items = await runTwitterCrawlee(actorId, input);
+    return { items, run: { defaultDatasetId: `local-crawlee-${Date.now()}` } };
+  }
+  if (actorId === "local/pinterest") {
+    const { runPinterestCrawlee } = await import("./providers/crawlee-pinterest");
+    const items = await runPinterestCrawlee(actorId, input);
+    return { items, run: { defaultDatasetId: `local-crawlee-${Date.now()}` } };
+  }
+  if (actorId === "local/reddit") {
+    const { runRedditCrawlee } = await import("./providers/crawlee-reddit");
+    const items = await runRedditCrawlee(actorId, input);
+    return { items, run: { defaultDatasetId: `local-crawlee-${Date.now()}` } };
+  }
+  if (actorId === "local/linkedin") {
+    const { runLinkedinCrawlee } = await import("./providers/crawlee-linkedin");
+    const items = await runLinkedinCrawlee(actorId, input);
+    return { items, run: { defaultDatasetId: `local-crawlee-${Date.now()}` } };
+  }
+  if (actorId === "local/snapchat") {
+    const { runSnapchatCrawlee } = await import("./providers/crawlee-snapchat");
+    const items = await runSnapchatCrawlee(actorId, input);
     return { items, run: { defaultDatasetId: `local-crawlee-${Date.now()}` } };
   }
 

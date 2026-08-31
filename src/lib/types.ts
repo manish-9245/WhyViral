@@ -1,7 +1,16 @@
 // Shared WhyViral domain types — mirrors the normalizeVideo / normalizeReel / normalizeAd shape
 // used across all three platform scrapers. Mastra tools and shadcn UI both import from here.
 
-export type Platform = "tiktok" | "instagram" | "meta";
+export type Platform =
+  | "tiktok"
+  | "instagram"
+  | "meta"
+  | "youtube"
+  | "twitter"
+  | "pinterest"
+  | "reddit"
+  | "linkedin"
+  | "snapchat";
 
 export interface Video {
   platform: Platform;
@@ -115,6 +124,11 @@ export interface ArchiveRunParams {
   igAccounts?: string[];
   metaBrands?: string[];
   testMode?: boolean;
+  // youtube / twitter / etc. extra sources (optional, not required for tiktok/ig/meta)
+  ytChannels?: string[];
+  ytHandles?: string[];
+  twitterAccounts?: string[];
+  twitterHashtags?: string[];
 }
 
 export interface ArchiveReport {
