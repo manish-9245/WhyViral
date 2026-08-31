@@ -13,6 +13,12 @@ import { trackEvent } from "../lib/telemetry";
 import { scrapeTikTok, rankVideos } from "../tools/scrape-tiktok";
 import { scrapeInstagram } from "../tools/scrape-instagram";
 import { scrapeMeta, scrapeMetaBrands, rankAds } from "../tools/scrape-meta";
+import { scrapeYoutube } from "../tools/scrape-youtube";
+import { scrapeTwitter } from "../tools/scrape-twitter";
+import { scrapePinterest } from "../tools/scrape-pinterest";
+import { scrapeReddit } from "../tools/scrape-reddit";
+import { scrapeLinkedin } from "../tools/scrape-linkedin";
+import { scrapeSnapchat } from "../tools/scrape-snapchat";
 import { discoverInstagram, confirmDiscovery } from "../tools/discover-instagram";
 import { deriveBrands, deriveKeywords } from "../tools/derive";
 import { prescreenCaptions } from "../tools/prescreen";
@@ -27,7 +33,7 @@ const withTimeout = (promise, ms) => {
 
 export const archiveInputSchema = z.object({
   keywords: z.array(z.string()).min(1),
-  platform: z.enum(["tiktok", "instagram", "meta"]).default("tiktok"),
+  platform: z.enum(["tiktok", "instagram", "meta", "youtube", "twitter", "pinterest", "reddit", "linkedin", "snapchat", "all"]).default("tiktok"),
   count: z.number().default(5),
   pool: z.number().optional(),
   rankBy: z.string().default("engagement"),
@@ -69,10 +75,13 @@ export const scrapeStep = createStep({
       const data = JSON.parse(readFileSync(videosPath, "utf8"));
       const storedPool = (data.pool || data.raw || []).map((v) => v).filter((v) => v.url);
       console.log(`♻️ Reusing last ${platform} scrape: pool ${storedPool.length}`);
-      const candidates = platform === "meta" ? rankAds(storedPool, { daysFloor: inputData.metaDaysFloor, count: Number.MAX_SAFE_INTEGER }) : rankVideos(storedPool, { rankBy, viewFloor, count: Number.MAX_SAFE_INTEGER, language });
+      let candidates;
+      if (platform === "meta") candidates = rankAds(storedPool, { daysFloor: inputData.metaDaysFloor, count: Number.MAX_SAFE_INTEGER });
+      else if (platform === "youtube") { const { rankYoutube } = await import("../tools/scrape-youtube"); candidates = rankYoutube(storedPool, { rankBy, viewFloor: Math.min(viewFloor,5000), count: Number.MAX_SAFE_INTEGER, language }); }
+      else candidates = rankVideos(storedPool, { rankBy, viewFloor, count: Number.MAX_SAFE_INTEGER, language });
       return { pool: storedPool, candidates, igSources: data.igSources, keywords: data.keywords || keywords, keywordLabel: data.keyword || keywordLabel };
     }
-    const willKeywordSearch = platform === "tiktok" || (platform === "instagram" && !igHashtags.length && !igAccounts.length && !igDiscover);
+    const willKeywordSearch = platform === "tiktok" || platform === "youtube" || platform === "twitter" || platform === "pinterest" || platform === "reddit" || (platform === "instagram" && !igHashtags.length && !igAccounts.length && !igDiscover);
     if (fullEffort && willKeywordSearch) {
       const want = Math.max(4, Math.min(12, Math.ceil(count / 12)));
       console.log(`🧠 Widening search: deriving ${want} extra terms...`);
@@ -99,12 +108,27 @@ export const scrapeStep = createStep({
         res = { pool: [...kwRes.pool, ...brandRes.pool], raw: [...(kwRes.raw || []), ...(brandRes.raw || [])] };
       } else if (brands.length) res = await scrapeMetaBrands(brands, brandOpts);
       else res = await scrapeMeta(keywords, { count, pool, country: metaCountries });
+    } else if (platform === "youtube") {
+      res = await scrapeYoutube(keywords, { count, pool, rankBy, viewFloor: Math.min(viewFloor,5000), language });
+    } else if (platform === "twitter") {
+      res = await scrapeTwitter(keywords, { count, pool, rankBy, viewFloor: 0 });
+    } else if (platform === "pinterest") {
+      res = await scrapePinterest(keywords, { count, pool, rankBy });
+    } else if (platform === "reddit") {
+      res = await scrapeReddit(keywords, { count, pool, rankBy });
+    } else if (platform === "linkedin") {
+      res = await scrapeLinkedin(keywords, { count, pool });
+    } else if (platform === "snapchat") {
+      res = await scrapeSnapchat(keywords, { count, pool });
     } else {
       const effectiveRegions = regions?.length ? regions : fullEffort ? ["US","GB","AU","IN","CA"] : [country];
       res = await scrapeTikTok(keywords, { count, pool, rankBy, viewFloor, minLikes, language, country, regions: effectiveRegions });
     }
     const poolData = res.pool;
-    const candidates = platform === "meta" ? rankAds(poolData, { daysFloor: inputData.metaDaysFloor, count: Number.MAX_SAFE_INTEGER }) : rankVideos(poolData, { rankBy, viewFloor, count: Number.MAX_SAFE_INTEGER, language });
+    let candidates;
+    if (platform === "meta") candidates = rankAds(poolData, { daysFloor: inputData.metaDaysFloor, count: Number.MAX_SAFE_INTEGER });
+    else if (platform === "youtube") { const { rankYoutube } = await import("../tools/scrape-youtube"); candidates = rankYoutube(poolData, { rankBy, viewFloor: Math.min(viewFloor,5000), count: Number.MAX_SAFE_INTEGER, language }); }
+    else candidates = rankVideos(poolData, { rankBy, viewFloor, count: Number.MAX_SAFE_INTEGER, language });
     mkdirSync("output", { recursive: true });
     writeFileSync(videosPath, JSON.stringify({ platform, keyword: keywords.join(", "), keywords, igSources, scrapedAt: new Date().toISOString(), rankBy, viewFloor, videos: res.videos || [], raw: res.raw || [], pool: poolData }, null, 2));
     if (!candidates.length) throw new Error(platform === "meta" ? `No ads running ${inputData.metaDaysFloor}+ days` : "No videos cleared filters");

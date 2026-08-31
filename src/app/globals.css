@@ -2,9 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Crawl Evidence Archive — Ink bench + Paper log
-   THESIS: forensic archive, not SaaS dashboard
-   Palette: Ink #0a0a0b, Paper #fdfbf7, Stone #78716c, Amber #f59e0b, Vermillion #ef4444
+/* WhyViral — Evidence Archive
+   THESIS: forensic lab bench, not SaaS dashboard.
+   WORLD: Ink (lab bench) + Paper (dossier) + Amber (evidence tag) + Stone (field notes)
+   LIGHT: warm, tactile, paper under lab lamp — afternoon in the archive.
+   TYPE: Sora for dossier headlines (human, sharp), Geist Mono for evidence (precise), Geist Sans for UI.
 */
 
 @layer base {
@@ -61,13 +63,68 @@
 }
 @layer base {
   * { @apply border-border; }
-  body { @apply bg-background text-foreground antialiased; font-feature-settings: "ss01" 1, "ss02" 1; }
-  /* Evidence log ruled lines */
-  .ruled { background-image: linear-gradient(to bottom, transparent 31px, hsl(var(--border)) 32px); background-size: 100% 32px; }
-  /* String board dashed */
-  .string { stroke: hsl(var(--stone)); stroke-width: 1.2; stroke-dasharray: 6 6; fill: none; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "ss01" 1, "ss02" 1;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  /* Paper stock — warm, not flat */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.4'/%3E%3C/svg%3E");
+    mix-blend-mode: multiply;
+    z-index: -1;
+  }
+  /* Evidence log ruled lines — subtle */
+  .ruled { background-image: linear-gradient(to bottom, transparent 31px, hsl(var(--line)) 32px); background-size: 100% 32px; }
+  /* String board — the red string is amber thread */
+  .string { stroke: hsl(var(--amber) / 0.35); stroke-width: 1.1; stroke-dasharray: 6 6; fill: none; }
+  :root { --safe-top: env(safe-area-inset-top); --safe-bottom: env(safe-area-inset-bottom); }
+  :focus-visible { outline: 2px solid hsl(var(--amber)); outline-offset: 2px; }
+  :focus:not(:focus-visible) { outline: none; }
+  /* Better selection — amber ink */
+  ::selection { background: hsl(var(--amber)); color: hsl(var(--ink)); }
 }
-/* Focus ring uses amber, not default */
+
 @layer utilities {
   .text-balance { text-wrap: balance; }
+  html {
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--stone) / 0.18) transparent;
+  }
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-thumb { background: hsl(var(--stone) / 0.16); border-radius: 999px; border: 1px solid transparent; background-clip: content-box; }
+  ::-webkit-scrollbar-thumb:hover { background: hsl(var(--stone) / 0.24); background-clip: content-box; }
+  /* Dossier paper — subtle inner light */
+  .surface-paper {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--line));
+    box-shadow: 0 1px 2px rgba(10,10,11,0.04), 0 8px 24px -12px rgba(10,10,11,0.08), 0 0 0 1px hsl(var(--line) / 0.6) inset;
+  }
+  /* Ink bench — deep, not flat black */
+  .surface-ink {
+    background: hsl(var(--ink));
+    border: 1px solid hsl(0 0% 14%);
+  }
+  /* Evidence tag — amber pin */
+  .pin-amber {
+    box-shadow: 0 1px 2px rgba(245,158,11,0.25), 0 0 0 1px hsl(var(--amber) / 0.2) inset;
+  }
+  .tap-feedback:active { transform: scale(0.985); }
+  @media (prefers-reduced-motion: reduce) { .tap-feedback:active { transform: none; } }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

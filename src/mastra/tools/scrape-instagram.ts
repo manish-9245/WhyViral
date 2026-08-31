@@ -3,7 +3,7 @@
 
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { runActor, apifyTokens } from "../lib/apify";
+import { runActor, getScraperProvider, isApifyConfigured, describeProvider } from "../lib/scraper";
 import { detectCommentBait } from "./scrape-tiktok";
 import type { Video } from "../../lib/types";
 
@@ -21,9 +21,11 @@ export function normalizeReel(item: Record<string, unknown>): Video {
   const shares = (item.sharesCount as number) ?? (item.reshareCount as number) ?? 0;
   const saves = 0;
   const followers = (item.ownerFollowersCount as number) ?? (item.followersCount as number) ?? 0;
-  const engagementRate = views > 0 ? (likes + comments + shares + saves) / views : 0;
-  const weightedEngagementRate = views > 0 ? (shares * 4 + saves * 3 + likes * 1 + comments * 0.5) / views : 0;
+  const engagementRate = views > 0 ? (likes + comments + shares + saves) / views : likes > 0 ? likes / 1000 : 0;
+  const weightedEngagementRate = views > 0 ? (shares * 4 + saves * 3 + likes * 1 + comments * 0.5) / views : likes > 0 ? likes / 1000 : 0;
   const reachMultiple = followers > 0 ? views / followers : null;
+  const isVideo = Boolean((item.videoUrl as string) || (item.video_url as string) || String(item.type || "").toLowerCase().includes("video") || String(item.productType || "").toLowerCase().includes("clips"));
+  const url = (item.url as string) || (shortCode ? (isVideo ? `https://www.instagram.com/reel/${shortCode}/` : `https://www.instagram.com/p/${shortCode}/`) : "");
   return {
     platform: "instagram",
     id, caption,
@@ -32,12 +34,15 @@ export function normalizeReel(item: Record<string, unknown>): Video {
     followers,
     verified: (item.ownerIsVerified as boolean) ?? (item.isVerified as boolean) ?? false,
     isAd: (item.isSponsored as boolean) ?? false,
-    url: (item.url as string) || (shortCode ? `https://www.instagram.com/reel/${shortCode}/` : ""),
+    url,
     views, likes, comments, shares, saves, engagementRate, weightedEngagementRate, reachMultiple,
     likelyCommentBait: detectCommentBait(caption),
     createTime: (item.timestamp as string) || (item.takenAt as string) || null,
     videoUrl: (item.videoUrl as string) || (item.video_url as string) || ((item.videoUrls as string[])?.[0]) || "",
-  };
+    // keep imageUrl for text+image analysis when videoUrl missing
+    imageUrl: (item.imageUrl as string) || (item.displayUrl as string) || (item.thumbnailUrl as string) || "",
+    contentType: isVideo ? "video" : "image",
+  } as unknown as Video & { imageUrl?: string; contentType?: string };
 }
 
 export function normalizeReelFromSearch(item: Record<string, unknown>): Video {
@@ -71,16 +76,25 @@ export function normalizeReelFromSearch(item: Record<string, unknown>): Video {
 }
 
 function isReelItem(item: Record<string, unknown>): boolean {
+  // Support both text (image/carousel) and video — both analyzable (caption + image vs video)
+  // Video detection: videoUrl or clip type → video; otherwise treat as image/text and keep if it has caption/id
   if (item.videoUrl || item.video_url) return true;
   const type = String(item.type || item.productType || "").toLowerCase();
-  return type.includes("video") || type.includes("clips") || type.includes("reel");
+  if (type.includes("video") || type.includes("clips") || type.includes("reel")) return true;
+  // Image/carousel/text posts: keep if they have a code/caption (analyzable via text + image)
+  const hasCaption = Boolean(item.caption || item.text || item.code || item.shortCode || item.shortcode);
+  if (hasCaption) return true;
+  return false;
 }
 
 export async function scrapeInstagram(
   sources: { keywords?: string[]; hashtags?: string[]; accounts?: string[] },
   { count = 5, pool, newerThan = "90 days" }: { count?: number; pool?: number; newerThan?: string } = {}
 ): Promise<{ pool: Video[]; poolCount: number; raw: unknown[] }> {
-  if (!apifyTokens().length) throw new Error("No APIFY_TOKEN found in your .env file.");
+  const provider = getScraperProvider();
+  if (provider === "apify" && !isApifyConfigured()) throw new Error("APIFY_TOKEN missing — set it in .env or use SCRAPER_PROVIDER=crawlee (open-source, no token).");
+  if (provider !== "apify" && !isApifyConfigured()) console.log(`   🕷️  Using ${describeProvider()} — IG fetch stays under 30 req/min (anti-ban)`);
+  else console.log(`   🕷️  Provider: ${describeProvider()}`);
   const keywords = (sources.keywords || []).filter(Boolean);
   const hashtags = (sources.hashtags || []).filter(Boolean);
   const accounts = (sources.accounts || []).filter(Boolean);
@@ -128,7 +142,9 @@ export async function scrapeInstagram(
     const vids = b.type === "norm" ? (b.items as Video[]) : (b.items as Record<string, unknown>[]).filter(isReelItem).map(normalizeReel);
     for (const v of vids) { if (v.url && v.id && !seen.has(v.id as string)) { seen.add(v.id as string); allVideos.push(v); } }
   }
-  console.log(`   Pulled ${rawCount} items → ${allVideos.length} unique reels.`);
+  const videoCount = allVideos.filter((v) => (v as unknown as { contentType?: string }).contentType === "video" || Boolean(v.videoUrl)).length;
+  const textCount = allVideos.length - videoCount;
+  console.log(`   Pulled ${rawCount} items → ${allVideos.length} unique posts (${videoCount} video, ${textCount} image/text) — both analyzable.`);
   return { pool: allVideos, poolCount: allVideos.length, raw: [] };
 }
 

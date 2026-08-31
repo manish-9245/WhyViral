@@ -3,7 +3,7 @@
 
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { runActor, apifyTokens } from "../lib/apify";
+import { runActor, getScraperProvider, isApifyConfigured, describeProvider } from "../lib/scraper";
 import { detectCommentBait } from "./scrape-tiktok";
 import type { Video } from "../../lib/types";
 
@@ -74,7 +74,10 @@ export async function scrapeMeta(
   keywords: string | string[],
   { count = 5, pool, country = "US" }: { count?: number; pool?: number; country?: string | string[] } = {}
 ) {
-  if (!apifyTokens().length) throw new Error("No APIFY_TOKEN found in your .env file.");
+  const _provider = getScraperProvider();
+  if (_provider === "apify" && !isApifyConfigured()) throw new Error("APIFY_TOKEN missing — set it in .env or use SCRAPER_PROVIDER=crawlee (open-source, no token).");
+  if (_provider !== "apify" && !isApifyConfigured()) console.log(`   🕷️  Using ${describeProvider()} — Meta Ad Library is public data (safest, 800ms jitter between URLs)`);
+  else console.log(`   🕷️  Provider: ${describeProvider()}`);
   const queries = Array.isArray(keywords) ? keywords : [keywords];
   const countries = Array.isArray(country) ? country : [country];
   const poolSize = pool || Math.max(count * 6, 20);
@@ -126,7 +129,9 @@ async function scrapePageAds(pageId: string, { country = "ALL", count = 60, maxS
 }
 
 export async function scrapeMetaBrands(brandNames: string[], { count = 100, country = "ALL", perBrandCount = 60, idSpendUsd = 0.05, pageSpendUsd = 0.4 } = {}) {
-  if (!apifyTokens().length) throw new Error("No APIFY_TOKEN found in your .env file.");
+  const _p2 = getScraperProvider();
+  if (_p2 === "apify" && !isApifyConfigured()) throw new Error("APIFY_TOKEN missing — set it in .env or use SCRAPER_PROVIDER=crawlee.");
+  if (_p2 !== "apify" && !isApifyConfigured()) console.log(`   🕷️  Using ${describeProvider()} — brand lookup via public Meta search`);
   const daysFloor = Number(process.env.META_DAYS_FLOOR) || 30;
   console.log(`\n🔎 Brand-first Meta scrape: ${brandNames.length} brand(s)...`);
   let allAds: Video[] = [];

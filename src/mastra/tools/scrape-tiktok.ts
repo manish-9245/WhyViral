@@ -4,7 +4,7 @@
 
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
-import { runActor, currentClient, apifyTokens } from "../lib/apify";
+import { runActor, currentClient, getScraperProvider, isApifyConfigured, describeProvider } from "../lib/scraper";
 import type { Video } from "../../lib/types";
 
 const APIFY_TIKTOK_ACTOR = "clockworks/tiktok-scraper";
@@ -115,7 +115,10 @@ export async function scrapeTikTok(
   } = {}
 ): Promise<{ videos: Video[]; raw: unknown[]; pool: Video[]; poolCount: number; rankBy: string }> {
   const { count = 5, pool, rankBy = "engagement", viewFloor = 100_000, minLikes = 0, language = "en", country = "US", legacy = false, regions } = opts;
-  if (!apifyTokens().length) throw new Error("No APIFY_TOKEN found in your .env file.");
+  const provider = getScraperProvider();
+  if (provider === "apify" && !isApifyConfigured()) throw new Error("APIFY_TOKEN missing — set it in .env or use SCRAPER_PROVIDER=crawlee (open-source, no token).");
+  if (provider !== "apify" && !isApifyConfigured()) console.log(`   🕷️  Using ${describeProvider()} — no Apify token needed (anti-ban: TikWM cache + 1 concurrency)`);
+  else console.log(`   🕷️  Provider: ${describeProvider()}`);
   const queries = Array.isArray(keyword) ? keyword : [keyword];
   const poolSize = pool || Math.max(count * 6, 20);
   const apify = currentClient();
