@@ -75,7 +75,7 @@ export default async function ReportPage({ params }: { params: Promise<{ platfor
 
   const videoMap: Record<string, { url: string; metric: string }> = {};
   report.videos.forEach((v, i) => {
-    const metric = v.platform === "meta" ? `${v.daysRunning} days` : `${v.views.toLocaleString()} views`;
+    const metric = v.platform === "meta" ? `${v.daysRunning} days` : `${v.views.toLocaleString('en-US')} views`;
     videoMap[`V${i + 1}`] = { url: v.url, metric: `@${v.author} · ${metric}` };
   });
 

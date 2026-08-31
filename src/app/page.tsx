@@ -28,20 +28,20 @@ const STAGES: { id: Stage; label: string }[] = [
 
 function StageDot({ status, label, onRerun }: { status: StageStatus; label: string; onRerun?: () => void }) {
   const cfg = {
-    pending: { dot: "bg-stone/20", text: "text-stone/60", icon: null },
-    running: { dot: "bg-amber animate-pulse", text: "text-amber-700", icon: <Loader2 className="h-2.5 w-2.5 animate-spin" /> },
-    done: { dot: "bg-emerald-500", text: "text-emerald-700", icon: <CheckCircle2 className="h-2.5 w-2.5" /> },
-    failed: { dot: "bg-red-500", text: "text-red-600", icon: <AlertTriangle className="h-2.5 w-2.5" /> },
-    skipped: { dot: "bg-stone/30", text: "text-stone/60", icon: null },
+    pending: { dot: "bg-white border border-line", text: "text-stone/50", icon: null },
+    running: { dot: "bg-amber border border-amber shadow-sm animate-pulse", text: "text-amber-700", icon: <Loader2 className="h-2.5 w-2.5 animate-spin" /> },
+    done: { dot: "bg-emerald-500 border border-emerald-600 shadow-sm", text: "text-emerald-700", icon: <CheckCircle2 className="h-2.5 w-2.5" /> },
+    failed: { dot: "bg-red-500 border border-red-600 shadow-sm", text: "text-red-600", icon: <AlertTriangle className="h-2.5 w-2.5" /> },
+    skipped: { dot: "bg-paper border border-line", text: "text-stone/40", icon: null },
   }[status];
   return (
     <div className="flex items-center gap-1.5">
-      <div className={`h-5 w-5 rounded-full flex items-center justify-center ${cfg.dot} ${status === "done" ? "text-white" : status === "failed" ? "text-white" : status === "running" ? "text-ink" : "text-stone"}`}>
+      <div className={`h-5 w-5 rounded-full grid place-items-center shrink-0 ${cfg.dot} ${status === "done" ? "text-white" : status === "failed" ? "text-white" : status === "running" ? "text-ink" : "text-stone/40"}`}>
         {cfg.icon}
       </div>
-      <span className={`font-mono text-[10px] ${cfg.text}`}>{label}</span>
+      <span className={`font-mono text-[10px] tracking-[0.04em] ${cfg.text}`}>{label}</span>
       {(status === "done" || status === "failed") && onRerun && (
-        <button onClick={onRerun} className="font-mono text-[9px] text-amber-600 hover:text-amber-800 border border-amber-200 rounded px-1 py-0.5 bg-amber-50 ml-0.5">retry</button>
+        <button onClick={onRerun} className="font-mono text-[9px] font-medium text-amber-700 hover:text-amber-800 hover:bg-amber-100 border border-amber-200 rounded-full px-1.5 py-0.5 bg-amber-50 ml-0.5 transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500">retry</button>
       )}
     </div>
   );
@@ -183,23 +183,23 @@ export default function HomePage() {
       <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
 
         {/* ── Input bar ────────────────────────────────────────── */}
-        <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
-          <div className="flex items-center gap-3 p-4">
+        <div className="bg-white rounded-[16px] border border-line shadow-evidence overflow-hidden">
+          <div className="flex flex-col lg:flex-row lg:items-end gap-4 p-5">
             {/* Keyword */}
             <div className="flex-1 min-w-0">
-              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider">KEYWORD</div>
+              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-[0.08em]">KEYWORD</div>
               <input
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder="e.g. magnesium gummies, llm tutorial"
-                className="w-full h-10 rounded-lg border border-stone/20 px-3 font-mono text-[13px] placeholder:text-stone/40 focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 bg-paper"
+                className="w-full h-10 rounded-[12px] border border-line bg-paper px-3 font-mono text-[13px] leading-none placeholder:text-stone/50 focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 focus:bg-white transition-colors"
               />
             </div>
 
             {/* Platform */}
-            <div>
-              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider">PLATFORM — 9 + all</div>
-              <div className="flex flex-wrap gap-1.5 max-w-[460px]">
+            <div className="lg:max-w-[420px]">
+              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-[0.08em]">PLATFORM — 9 + ALL</div>
+              <div className="flex flex-wrap gap-1.5">
                 {([
                   ["tiktok","TikTok"],["instagram","Instagram"],["meta","Meta"],
                   ["youtube","YouTube"],["twitter","X"],["pinterest","Pinterest"],
@@ -209,7 +209,8 @@ export default function HomePage() {
                   <button
                     key={val}
                     onClick={() => setPlatform(val as PlatformId)}
-                    className={`h-7 px-2.5 rounded-full border font-mono text-[11px] transition-colors flex items-center gap-1.5 ${platform === val ? "bg-ink text-white border-ink" : "bg-white text-stone border-stone/20 hover:bg-stone-50"}`}
+                    aria-pressed={platform === val}
+                    className={`h-7 px-2.5 rounded-full border font-mono text-[11px] flex items-center gap-1.5 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-1 ${platform === val ? "bg-ink text-white border-ink shadow-pin" : "bg-white text-stone border-line hover:bg-paper hover:border-stone/30"}`}
                   >
                     <PlatformIcon platform={val} size={12} />
                     {label}
@@ -219,22 +220,22 @@ export default function HomePage() {
             </div>
 
             {/* Count */}
-            <div>
-              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider">TARGET</div>
-              <div className="flex items-center rounded-lg border border-stone/20 overflow-hidden">
-                <button onClick={() => setCount((c) => Math.max(1, c - 1))} className="h-10 w-9 flex items-center justify-center bg-white text-stone hover:bg-stone-50 font-mono text-[14px]">−</button>
-                <div className="h-10 w-12 flex items-center justify-center bg-paper font-mono text-[13px] font-semibold">{count}</div>
-                <button onClick={() => setCount((c) => Math.min(100, c + 1))} className="h-10 w-9 flex items-center justify-center bg-white text-stone hover:bg-stone-50 font-mono text-[14px]">+</button>
+            <div className="shrink-0">
+              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-[0.08em]">TARGET</div>
+              <div className="flex items-center rounded-[12px] border border-line overflow-hidden bg-white">
+                <button onClick={() => setCount((c) => Math.max(1, c - 1))} aria-label="Decrease target" className="h-10 w-9 grid place-items-center bg-white text-stone hover:bg-paper hover:text-ink transition-colors focus-visible:outline-none focus-visible:bg-paper">−</button>
+                <div className="h-10 w-12 grid place-items-center bg-paper font-mono text-[13px] font-semibold tabular-nums border-x border-line">{count}</div>
+                <button onClick={() => setCount((c) => Math.min(100, c + 1))} aria-label="Increase target" className="h-10 w-9 grid place-items-center bg-white text-stone hover:bg-paper hover:text-ink transition-colors focus-visible:outline-none focus-visible:bg-paper">+</button>
               </div>
             </div>
 
             {/* Run */}
-            <div className="flex flex-col justify-end">
-              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider invisible">RUN</div>
+            <div className="shrink-0 flex flex-col justify-end">
+              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-[0.08em] invisible select-none">RUN</div>
               <button
                 onClick={() => handleRun()}
                 disabled={running || !keyword.trim()}
-                className="h-10 px-6 rounded-lg bg-amber text-ink font-mono text-[12px] font-semibold flex items-center gap-2 hover:bg-amber/90 disabled:opacity-40 transition-colors"
+                className="h-10 px-6 rounded-[12px] bg-amber text-ink font-mono text-[12px] font-semibold flex items-center gap-2 hover:bg-amber/90 active:bg-amber disabled:opacity-40 disabled:cursor-not-allowed shadow-pin transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
               >
                 {running ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Play className="h-3.5 w-3.5 fill-ink" />}
                 {running ? "Running…" : "Run"}
@@ -243,20 +244,21 @@ export default function HomePage() {
           </div>
 
           {/* Advanced controls — collapsible row of 5 dropdowns */}
-          <div className="border-t border-stone/10">
+          <div className="border-t border-line bg-paper/30">
             <button
               onClick={() => setAdvancedOpen((o) => !o)}
-              className="w-full h-9 px-4 flex items-center justify-between font-mono text-[10px] text-stone/60 hover:text-stone tracking-wider"
+              className="w-full h-9 px-4 flex items-center justify-between font-mono text-[10px] tracking-[0.08em] text-stone/60 hover:text-stone hover:bg-white/60 transition-colors focus-visible:outline-none focus-visible:bg-white"
+              aria-expanded={advancedOpen}
             >
-              <span className="flex items-center gap-2">
-                <SlidersHorizontal className="h-3 w-3" /> ADVANCED
-                <span className="text-stone/40">·</span>
-                <span className="text-stone/40">rank {rankBy} · views ≥{viewFloor.toLocaleString()} · {language} · {country} · deep {deepCount}</span>
+              <span className="flex items-center gap-2 truncate">
+                <SlidersHorizontal className="h-3 w-3 shrink-0" /> ADVANCED
+                <span className="text-stone/30">·</span>
+                <span className="text-stone/50 truncate">rank {rankBy} · views ≥{viewFloor.toLocaleString('en-US')} · {language} · {country} · deep {deepCount}</span>
               </span>
-              {advancedOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+              {advancedOpen ? <ChevronUp className="h-3 w-3 shrink-0" /> : <ChevronDown className="h-3 w-3 shrink-0" />}
             </button>
             {advancedOpen && (
-              <div className="px-4 pb-4 pt-1 grid grid-cols-2 sm:grid-cols-5 gap-3">
+              <div className="px-4 pb-4 pt-3 grid grid-cols-2 sm:grid-cols-5 gap-3 border-t border-line/50 bg-white/80">
                 <SelectField
                   label="RANK BY"
                   value={rankBy}
@@ -321,34 +323,34 @@ export default function HomePage() {
           </div>
 
           {/* Pipeline strip */}
-          <div className="border-t border-stone/10 px-4 py-3 flex items-center justify-between gap-4 bg-paper/50">
-            <div className="flex items-center gap-6">
-              <span className="font-mono text-[10px] text-stone/60 tracking-wider">PIPELINE</span>
-              <div className="flex items-center gap-5">
+          <div className="border-t border-line px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-paper/60">
+            <div className="flex items-center gap-4 sm:gap-6">
+              <span className="font-mono text-[10px] text-stone/60 tracking-[0.08em] shrink-0">PIPELINE</span>
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
                 {STAGES.map((s, i) => (
-                  <div key={s.id} className="flex items-center gap-2">
+                  <div key={s.id} className="flex items-center gap-1.5">
                     <StageDot
                       status={pipeline?.statuses?.[s.id] ?? "pending"}
                       label={s.label}
                       onRerun={() => handleRun({ stage: s.id })}
                     />
                     {i < STAGES.length - 1 && (
-                      <div className={`w-4 h-px ${(pipeline?.statuses?.[s.id] ?? "pending") === "done" ? "bg-emerald-300" : "bg-stone/20"}`} />
+                      <div className={`w-3 sm:w-4 h-px ${(pipeline?.statuses?.[s.id] ?? "pending") === "done" ? "bg-emerald-300" : "bg-stone/20"}`} />
                     )}
                   </div>
                 ))}
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 shrink-0">
               {failedStage && !running && (
-                <button onClick={() => handleRun({ resume: true })} className="h-7 px-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 font-mono text-[10px] flex items-center gap-1.5 hover:bg-emerald-100 transition-colors">
+                <button onClick={() => handleRun({ resume: true })} className="h-7 px-3 rounded-[10px] bg-emerald-50 border border-emerald-200 text-emerald-700 font-mono text-[10px] font-medium flex items-center gap-1.5 hover:bg-emerald-100 hover:border-emerald-300 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500">
                   <RefreshCw className="h-3 w-3" /> Resume
                 </button>
               )}
               {hasState && !running && (
-                <button onClick={() => handleRun({ clearState: true })} className="h-7 px-3 rounded-lg bg-stone-50 border border-stone/20 text-stone font-mono text-[10px] hover:bg-stone-100 transition-colors">Reset</button>
+                <button onClick={() => handleRun({ clearState: true })} className="h-7 px-3 rounded-[10px] bg-white border border-line text-stone font-mono text-[10px] hover:bg-paper hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone">Reset</button>
               )}
-              <button onClick={fetchPipeline} className="h-7 w-7 flex items-center justify-center rounded-lg border border-stone/20 text-stone hover:bg-white transition-colors"><RefreshCw className="h-3 w-3" /></button>
+              <button onClick={fetchPipeline} aria-label="Refresh pipeline" className="h-7 w-7 grid place-items-center rounded-[10px] border border-line bg-white text-stone hover:bg-paper hover:text-ink transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-stone"><RefreshCw className="h-3 w-3" /></button>
             </div>
           </div>
 

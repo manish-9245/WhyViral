@@ -316,7 +316,7 @@ export default function SettingsPage() {
                   <span className="font-mono text-[11px] text-stone/60">tapes cached · {(cache.size / 1024).toFixed(1)} KB</span>
                 </div>
                 <p className="font-mono text-[10px] text-stone/50 mt-1">
-                  {cache.mtime ? `Updated ${new Date(cache.mtime).toLocaleString()}` : "Never"}
+                  {cache.mtime ? `Updated ${new Date(cache.mtime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}` : "Never"}
                 </p>
                 <button
                   onClick={clearCache}
