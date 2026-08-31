@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Sora } from "next/font/google";
 import "./globals.css";
 
@@ -8,6 +8,13 @@ const sora = Sora({ subsets: ["latin"], variable: "--font-sora", display: "swap"
 
 const REPO = "https://github.com/manish-9245/WhyViral";
 const OG = `${REPO}/blob/main/public/og-image.png?raw=true`;
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: "#f59e0b",
+};
 
 export const metadata: Metadata = {
   metadataBase: new URL(REPO),
@@ -82,7 +89,11 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${sora.variable}`}>
-      <body className="min-h-screen bg-[#f8f7f4] font-sans antialiased text-[14px] leading-[1.5] text-ink selection:bg-amber selection:text-ink">
+      <body className="min-h-screen bg-[#f8f7f4] font-sans antialiased text-[14px] leading-[1.6] text-ink selection:bg-amber selection:text-ink">
+        {/* Skip link — §1 Accessibility — targets #main-content in each page */}
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:top-2 focus:left-2 focus:z-[9999] focus:h-10 focus:px-4 focus:inline-flex focus:items-center focus:rounded-lg focus:bg-ink focus:text-white focus:font-mono focus:text-[12px]">
+          Skip to main content
+        </a>
         <div className="h-[2px] w-full bg-amber" aria-hidden="true" />
         {children}
       </body>

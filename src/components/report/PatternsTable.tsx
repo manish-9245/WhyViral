@@ -6,10 +6,10 @@ import type { Patterns } from "@/lib/types";
 const TOP_N = 5;
 
 function Chip({ label, url, metric }: { label: string; url?: string; metric?: string }) {
-  if (!url) return <span className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2 py-0.5 font-mono text-[11px] font-medium">{label}</span>;
+  if (!url) return <span className="inline-flex items-center gap-1 rounded-full border border-line bg-white px-2.5 py-1 font-mono text-[11px] font-medium cursor-default">{label}</span>;
   return (
-    <a href={url} target="_blank" rel="noreferrer" title={metric} className="group inline-flex items-center gap-1 rounded-full bg-ink text-paper px-2.5 py-1 font-mono text-[11px] font-medium hover:bg-amber hover:text-ink transition-colors">
-      <span className="h-1.5 w-1.5 rounded-full bg-amber group-hover:bg-ink" /> {label} <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100" />
+    <a href={url} target="_blank" rel="noreferrer" title={metric} aria-label={`Open ${label} — ${metric ?? ""}`} className="group inline-flex items-center gap-1 rounded-full bg-ink text-paper px-2.5 py-1.5 font-mono text-[11px] font-medium hover:bg-amber hover:text-ink active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber focus-visible:ring-offset-1">
+      <span className="h-1.5 w-1.5 rounded-full bg-amber group-hover:bg-ink shrink-0" aria-hidden="true" /> {label} <ExternalLink className="h-3 w-3 opacity-60 group-hover:opacity-100 shrink-0" aria-hidden="true" />
     </a>
   );
 }
@@ -22,20 +22,24 @@ function ClusterCell({ cluster, videoMap }: { cluster: Record<string, unknown> |
   return (
     <td className="align-top p-4 bg-white border border-line">
       <div className="flex items-start gap-2">
-        <span className="mt-0.5 h-2 w-2 rounded-full bg-amber ring-1 ring-ink/10 shrink-0" />
+        <span className="mt-0.5 h-2 w-2 rounded-full bg-amber ring-1 ring-ink/10 shrink-0" aria-hidden="true" />
         <div className="min-w-0 flex-1">
-          {placement && <div className={`inline-flex rounded-full px-2 py-0.5 font-mono text-[10px] tracking-[0.08em] border mb-2 ${placement==="hook" ? "bg-amber text-ink border-amber" : "bg-white border-line text-stone"}`}>{placement.toUpperCase()}</div>}
-          <div className="font-display text-[13px] leading-4 font-semibold tracking-[-0.02em]" style={{fontFamily:"var(--font-sora)"}}>{cluster.theme as string}</div>
-          <div className="mt-1 font-mono text-[10px] tracking-[0.08em] text-stone">{cluster.count as number} TAPES</div>
+          {placement && <div className={`inline-flex rounded-full px-2 py-1 font-mono text-[10px] font-medium tracking-[0.08em] border mb-2 ${placement==="hook" ? "bg-amber text-ink border-amber" : "bg-white border-line text-stone"}`}>{placement.toUpperCase()}</div>}
+          <div className="font-display text-[13px] leading-5 font-semibold tracking-[-0.02em]" style={{fontFamily:"var(--font-sora)"}}>{cluster.theme as string}</div>
+          <div className="mt-1 font-mono text-[11px] font-medium tracking-[0.06em] text-stone">{cluster.count as number} TAPES</div>
           {members.length > 0 && (
             <div className="mt-3">
-              <button onClick={()=>setOpen(v=>!v)} className="inline-flex items-center gap-1 font-mono text-[11px] font-medium text-ink hover:text-amber transition-colors">
-                <ChevronDown className={`h-3 w-3 transition-transform ${open ? "rotate-180" : ""}`} /> {members.length} members — {open ? "hide" : "see all"}
+              <button
+                onClick={()=>setOpen(v=>!v)}
+                aria-expanded={open}
+                className="inline-flex items-center gap-1.5 min-h-[32px] px-2 -mx-2 rounded-lg font-mono text-[12px] font-medium text-ink hover:text-amber hover:bg-amber/10 active:scale-[0.98] transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber"
+              >
+                <ChevronDown className={`h-3.5 w-3.5 transition-transform duration-200 ${open ? "rotate-180" : ""}`} aria-hidden="true" /> {members.length} members — {open ? "hide" : "see all"}
               </button>
               {open && (
-                <div className="mt-2 space-y-2 animate-[log-in_340ms_cubic-bezier(0.16,1,0.3,1)]">
+                <div className="mt-2 space-y-2 motion-safe:animate-[log-in_340ms_cubic-bezier(0.16,1,0.3,1)]">
                   {members.map(m=> (
-                    <div key={m.label} className="flex items-start gap-2 rounded-[8px] border border-dashed border-line bg-paper p-2">
+                    <div key={m.label} className="flex items-start gap-2 rounded-[10px] border border-dashed border-line bg-paper p-2.5">
                       <Chip label={m.label} url={videoMap[m.label]?.url} metric={videoMap[m.label]?.metric} />
                       <span className="flex-1 font-mono text-[11px] leading-4 italic">“{m.verbatim}”</span>
                     </div>
@@ -55,11 +59,11 @@ function ClosedCell({ row, videoMap }: { row: Record<string, unknown> | undefine
   const evidence = (row.evidence as string[]) || [];
   return (
     <td className="align-top p-4 bg-white border border-line">
-      <div className="flex items-start gap-2">
-        <span className="mt-1 h-1.5 w-8 rounded-full bg-ink/10 overflow-hidden flex"><span className="h-full bg-amber" style={{width:`${Math.min(100, (row.count as number)*18)}%`}} /></span>
+      <div className="flex items-start gap-2" aria-hidden="true">
+        <span className="mt-1 h-1.5 w-8 rounded-full bg-ink/10 overflow-hidden flex"><span className="h-full bg-amber transition-all duration-500" style={{width:`${Math.min(100, (row.count as number)*18)}%`}} /></span>
       </div>
-      <div className="mt-2 font-display text-[13px] leading-4 font-semibold tracking-[-0.02em]" style={{fontFamily:"var(--font-sora)"}}>{row.value as string}</div>
-      <div className="mt-1 font-mono text-[10px] tracking-[0.08em] text-stone">{row.count as number} TAPES</div>
+      <div className="mt-2 font-display text-[13px] leading-5 font-semibold tracking-[-0.02em]" style={{fontFamily:"var(--font-sora)"}}>{row.value as string}</div>
+      <div className="mt-1 font-mono text-[11px] font-medium tracking-[0.06em] text-stone">{row.count as number} TAPES</div>
       <div className="mt-3 flex flex-wrap gap-1.5">
         {evidence.map(l=> <Chip key={l} label={l} url={videoMap[l]?.url} metric={videoMap[l]?.metric} />)}
       </div>
@@ -68,7 +72,7 @@ function ClosedCell({ row, videoMap }: { row: Record<string, unknown> | undefine
 }
 
 export function PatternsTable({ patterns, videoMap }: { patterns: Patterns | null; videoMap: Record<string, { url: string; metric: string }> }) {
-  if (!patterns) return <div className="rounded-[12px] border border-dashed border-line bg-paper p-6 font-mono text-[13px] text-stone">Too few tapes for a wall — need 5+ to pin patterns. Run with <span className="font-medium text-ink">--count 5</span> or more.</div>;
+  if (!patterns) return <div className="rounded-[16px] border border-dashed border-line bg-paper p-6 text-center"><p className="font-mono text-[13px] font-medium text-stone">Too few tapes for a wall — need 5+ to pin patterns.</p><p className="font-mono text-[11px] text-stone/60 mt-1">Run with <span className="font-medium text-ink">--count 5</span> or more.</p></div>;
 
   const hookVisual = (patterns as unknown as Record<string, unknown>).hookVisual as Record<string, unknown>[] | undefined || [];
   const hookSpoken = (patterns as unknown as Record<string, unknown>).hookSpoken as Record<string, unknown>[] | undefined || [];
@@ -86,20 +90,20 @@ export function PatternsTable({ patterns, videoMap }: { patterns: Patterns | nul
   ];
 
   return (
-    <div className="overflow-hidden rounded-[12px] border border-line bg-white">
-      <div className="flex items-center justify-between gap-4 bg-ink text-paper px-6 h-10">
-        <span className="flex items-center gap-2 font-mono text-[10px] tracking-[0.12em]"><Pin className="h-3.5 w-3.5 text-amber" /> WALL — PATTERNS · 6 dims × {TOP_N} pins</span>
-        <span className="hidden sm:inline-flex font-mono text-[10px] tracking-[0.06em] opacity-60">every pin links to its tape — Manish Tiwari</span>
+    <div className="overflow-hidden rounded-[16px] border border-line bg-white shadow-sm">
+      <div className="flex items-center justify-between gap-4 bg-ink text-paper px-5 sm:px-6 min-h-[44px] py-2">
+        <span className="flex items-center gap-2 font-mono text-[11px] font-medium tracking-[0.08em]"><Pin className="h-3.5 w-3.5 text-amber" aria-hidden="true" /> WALL — PATTERNS · 6 dims × {TOP_N} pins</span>
+        <span className="hidden sm:inline-flex font-mono text-[11px] tracking-[0.06em] opacity-60">every pin links to its tape — Manish Tiwari</span>
       </div>
-      <div className="px-6 py-3 bg-paper border-b border-line flex items-center gap-2 font-mono text-[11px] text-stone">
-        <span className="h-2 w-2 rounded-full bg-amber" /> Top {TOP_N} per column · expand members to verify clustering · string = same intent
+      <div className="px-5 sm:px-6 py-2.5 bg-paper border-b border-line flex items-center gap-2 font-mono text-[12px] font-medium text-stone">
+        <span className="h-2 w-2 rounded-full bg-amber shrink-0" aria-hidden="true" /> Top {TOP_N} per column · expand members to verify clustering · string = same intent
       </div>
 
       {/* Mobile: stacked evidence bags */}
       <div className="md:hidden p-4 space-y-6">
         {columns.map(c=> (
           <div key={c.header}>
-            <div className="font-mono text-[10px] tracking-[0.12em] text-ink flex items-center gap-1.5"><span className="h-1 w-6 bg-amber" /> {c.header.toUpperCase()}</div>
+            <div className="font-mono text-[11px] font-medium tracking-[0.08em] text-ink flex items-center gap-1.5"><span className="h-1 w-6 bg-amber" aria-hidden="true" /> {c.header.toUpperCase()}</div>
             <div className="mt-3 grid gap-3">
               {Array.from({length:TOP_N}).map((_,r)=>{
                 const item = (c.source as unknown[])[r] as Record<string,unknown>|undefined;
@@ -114,10 +118,11 @@ export function PatternsTable({ patterns, videoMap }: { patterns: Patterns | nul
       {/* Desktop: string board table */}
       <div className="hidden md:block overflow-auto">
         <table className="w-full border-collapse">
+          <caption className="sr-only">Evidence wall — top {TOP_N} patterns across 6 dimensions</caption>
           <thead>
             <tr>
               {columns.map(c=> (
-                <th key={c.header} className="bg-ink text-paper font-mono text-[10px] tracking-[0.12em] text-left px-4 py-3 border border-white/10 whitespace-nowrap">
+                <th key={c.header} scope="col" className="bg-ink text-paper font-mono text-[11px] font-medium tracking-[0.08em] text-left px-4 py-3 border border-white/10 whitespace-nowrap">
                   {c.header.toUpperCase()}
                 </th>
               ))}
@@ -136,9 +141,9 @@ export function PatternsTable({ patterns, videoMap }: { patterns: Patterns | nul
           </tbody>
         </table>
       </div>
-      <div className="px-6 py-3 bg-secondary/50 border-t border-line font-mono text-[11px] text-stone flex items-center justify-between">
-        <span>© Manish Tiwari — WhyViral · Built with proof</span>
-        <span className="hidden sm:inline">Lab No. 002 · every pin is a timestamped source</span>
+      <div className="px-5 sm:px-6 py-3 bg-paper border-t border-line font-mono text-[11px] text-stone flex items-center justify-between gap-4">
+        <span className="font-medium">© Manish Tiwari — WhyViral · Built with proof</span>
+        <span className="hidden sm:inline text-stone/60">Lab No. 002 · every pin is a timestamped source</span>
       </div>
     </div>
   );

@@ -7,18 +7,20 @@ type Env = Record<string, string>;
 type Health = { ok: boolean; message: string; service: string }[];
 
 function SelectField({ label, value, options, onChange }: { label: string; value: string; options: Array<[string, string]>; onChange: (v: string) => void }) {
+  const id = `sf-${label.toLowerCase().replace(/[^a-z0-9]+/g, '-')}`;
   return (
     <div>
-      <label className="font-mono text-[10px] text-stone/60 tracking-wider block mb-1.5">{label}</label>
+      <label htmlFor={id} className="font-mono text-[11px] font-medium text-stone tracking-[0.06em] block mb-1.5">{label}</label>
       <div className="relative">
         <select
+          id={id}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full h-9 appearance-none rounded-lg border border-stone/20 bg-paper pl-3 pr-8 font-mono text-[12px] text-ink focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 cursor-pointer"
+          className="w-full h-10 appearance-none rounded-[12px] border border-stone/20 bg-paper pl-3 pr-9 font-mono text-[13px] text-ink focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 cursor-pointer transition-colors"
         >
           {options.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
         </select>
-        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-stone/40 pointer-events-none" />
+        <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone/50 pointer-events-none" aria-hidden="true" />
       </div>
     </div>
   );
@@ -99,81 +101,86 @@ export default function SettingsPage() {
 
   const Field = ({ k, label, placeholder }: { k: string; label: string; placeholder?: string }) => (
     <div>
-      <label htmlFor={`env-${k}`} className="font-mono text-[10px] text-stone/60 tracking-wider block mb-1.5">{label}</label>
+      <label htmlFor={`env-${k}`} className="font-mono text-[11px] font-medium text-stone tracking-[0.06em] block mb-1.5">{label}</label>
       <input
         id={`env-${k}`}
         defaultValue={env[k] || ""}
         placeholder={placeholder}
         type={showTokens ? "text" : "password"}
-        className="w-full h-9 rounded-lg border border-stone/20 bg-paper px-3 font-mono text-[13px] text-ink focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20"
+        autoComplete="off"
+        spellCheck={false}
+        className="w-full h-10 rounded-[12px] border border-stone/20 bg-paper px-3.5 font-mono text-[13px] text-ink placeholder:text-stone/40 focus:outline-none focus:border-amber focus:ring-2 focus:ring-amber/20 focus:bg-white transition-colors"
       />
     </div>
   );
 
   return (
     <div className="min-h-screen bg-[#f8f7f4]">
-      {/* Nav */}
-      <header className="sticky top-0 z-40 bg-white border-b border-stone/10 shadow-sm">
-        <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-ink grid place-items-center text-amber text-[10px] font-bold font-mono">WV</div>
-            <span className="font-mono text-[11px] font-semibold tracking-[0.1em] text-ink">WHYVIRAL</span>
-          </div>
-          <nav className="flex items-center gap-1">
-            <Link href="/" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50">Console</Link>
-            <Link href="/history" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50">History</Link>
-            <Link href="/settings" className="h-8 px-3 flex items-center rounded-lg bg-stone-100 font-mono text-[11px]">
-              <Settings className="h-3.5 w-3.5" />
-            </Link>
+      {/* Nav — lab header */}
+      <header className="sticky top-0 z-40 bg-white/90 backdrop-blur-xl supports-[backdrop-filter]:bg-white/75 border-b border-line" style={{ paddingTop: "var(--safe-top)" }}>
+        <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-[56px] flex items-center justify-between">
+          <Link href="/" className="flex items-center gap-3 group">
+            <div className="h-9 w-9 rounded-[10px] bg-ink grid place-items-center text-amber text-[11px] font-bold font-mono shadow-pin group-hover:shadow-[0_4px_12px_rgba(10,10,11,0.12)] transition-shadow">WV</div>
+            <div className="hidden sm:block leading-none">
+              <div className="font-mono text-[12px] font-bold tracking-[0.14em] text-ink">WHYVIRAL <span className="font-normal text-stone/50 text-[10px] tracking-[0.08em]">/ LAB</span></div>
+              <div className="font-mono text-[10px] tracking-[0.08em] text-stone/60">Settings — local .env</div>
+            </div>
+            <div className="sm:hidden font-mono text-[12px] font-bold tracking-[0.1em] text-ink">WHYVIRAL</div>
+          </Link>
+          <nav className="flex items-center gap-1.5" aria-label="Primary">
+            <Link href="/" className="h-8 px-4 hidden sm:inline-flex items-center justify-center rounded-full font-mono text-[12px] font-medium text-stone hover:bg-stone-100 hover:text-ink transition-colors">Console</Link>
+            <Link href="/history" className="h-8 px-4 hidden sm:inline-flex items-center justify-center rounded-full font-mono text-[12px] font-medium text-stone hover:bg-stone-100 hover:text-ink transition-colors">History</Link>
+            <Link href="/settings" aria-current="page" aria-label="Settings" className="h-8 w-8 grid place-items-center rounded-full bg-ink text-white"><Settings className="h-4 w-4" aria-hidden="true" /></Link>
           </nav>
         </div>
       </header>
 
-      <div className="max-w-4xl mx-auto px-6 py-8 space-y-6">
+      <main id="main-content" className="max-w-[1280px] mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
 
-        {/* Header */}
-        <div className="flex items-end justify-between">
+        {/* Header — dossier title */}
+        <div className="flex items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-[28px] font-bold tracking-[-0.03em] text-ink">Settings</h1>
-            <p className="font-mono text-[12px] text-stone/60 mt-1">Local .env — no cloud, no sync.</p>
+            <h1 className="font-display text-[30px] font-bold tracking-[-0.04em] text-ink" style={{fontFamily:"var(--font-sora)"}}>Settings</h1>
+            <p className="font-mono text-[13px] leading-5 text-stone mt-1">Local <span className="font-semibold text-ink">.env</span> — no cloud, no sync. Writes directly to disk.</p>
           </div>
           <button
             onClick={() => setShowTokens((v) => !v)}
-            className="h-8 px-3 rounded-lg border border-stone/20 bg-white font-mono text-[11px] text-stone flex items-center gap-1.5 hover:bg-stone-50 transition-colors"
+            aria-pressed={showTokens}
+            className="h-9 px-3.5 rounded-full border border-line bg-white font-mono text-[12px] font-medium text-stone flex items-center gap-1.5 hover:bg-paper hover:text-ink hover:border-stone/20 active:scale-[0.98] transition-all cursor-pointer"
           >
-            {showTokens ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+            {showTokens ? <EyeOff className="h-3.5 w-3.5" aria-hidden="true" /> : <Eye className="h-3.5 w-3.5" aria-hidden="true" />}
             {showTokens ? "Hide" : "Show"} tokens
           </button>
         </div>
 
         {/* Connections health */}
-        <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
-          <div className="h-10 px-5 flex items-center justify-between border-b border-stone/10">
-            <div className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-stone/60">
-              <Plug className="h-3.5 w-3.5" /> CONNECTIONS
+        <div className="bg-white rounded-[16px] border border-line shadow-sm overflow-hidden">
+          <div className="min-h-[44px] px-5 flex items-center justify-between border-b border-line gap-4 py-2">
+            <div className="flex items-center gap-2 font-mono text-[11px] font-medium tracking-[0.08em] text-stone">
+              <Plug className="h-3.5 w-3.5" aria-hidden="true" /> CONNECTIONS
             </div>
             <button
               onClick={checkConnections}
               disabled={healthLoading}
-              className="h-7 px-3 rounded-lg border border-stone/20 bg-white font-mono text-[11px] text-stone hover:bg-stone-50 disabled:opacity-50 flex items-center gap-1.5 transition-colors"
+              className="h-9 min-w-[44px] px-3.5 rounded-full border border-line bg-white font-mono text-[12px] font-medium text-stone hover:bg-paper hover:text-ink disabled:opacity-50 flex items-center gap-1.5 active:scale-[0.98] transition-all cursor-pointer"
             >
-              {healthLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plug className="h-3 w-3" />}
+              {healthLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" /> : <Plug className="h-3.5 w-3.5" aria-hidden="true" />}
               Check now
             </button>
           </div>
           <div className="p-5">
             {!health && !healthLoading && (
-              <p className="font-mono text-[12px] text-stone/50">Click <span className="text-stone">Check now</span> to verify Apify + Gemini are reachable.</p>
+              <p className="font-mono text-[13px] leading-6 text-stone">Click <span className="font-medium text-ink">Check now</span> to verify Apify + Gemini are reachable.</p>
             )}
-            {healthLoading && <p className="font-mono text-[12px] text-stone/50">Pinging providers…</p>}
+            {healthLoading && <p className="font-mono text-[13px] text-stone">Pinging providers…</p>}
             {health && (
-              <div className="space-y-2">
+              <div className="space-y-2" role="status" aria-live="polite">
                 {health.map((h) => (
-                  <div key={h.service} className={`flex items-start gap-2 p-3 rounded-lg border ${h.ok ? "border-emerald-200 bg-emerald-50/50" : "border-red-200 bg-red-50/50"}`}>
-                    {h.ok ? <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" /> : <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" />}
+                  <div key={h.service} className={`flex items-start gap-3 p-3.5 rounded-xl border ${h.ok ? "border-emerald-200 bg-emerald-50" : "border-red-200 bg-red-50"}`}>
+                    {h.ok ? <CheckCircle2 className="h-4 w-4 text-emerald-600 mt-0.5 shrink-0" aria-hidden="true" /> : <AlertCircle className="h-4 w-4 text-red-600 mt-0.5 shrink-0" aria-hidden="true" />}
                     <div className="min-w-0 flex-1">
                       <div className="font-mono text-[12px] font-semibold text-ink">{h.service}</div>
-                      <div className="font-mono text-[11px] text-stone/70 mt-0.5 break-words leading-4">{h.message}</div>
+                      <div className="font-mono text-[12px] text-stone mt-0.5 break-words leading-5">{h.message}</div>
                     </div>
                   </div>
                 ))}
@@ -183,12 +190,12 @@ export default function SettingsPage() {
         </div>
 
         {/* Scraper provider — anti-ban safe by default */}
-        <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
-          <div className="h-10 px-5 flex items-center justify-between border-b border-stone/10">
-            <div className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-stone/60">
-              <Plug className="h-3.5 w-3.5" /> SCRAPER PROVIDER
+        <div className="bg-white rounded-[16px] border border-line shadow-sm overflow-hidden">
+          <div className="min-h-[44px] px-5 flex items-center justify-between border-b border-line gap-4 py-2">
+            <div className="flex items-center gap-2 font-mono text-[11px] font-medium tracking-[0.08em] text-stone">
+              <Plug className="h-3.5 w-3.5" aria-hidden="true" /> SCRAPER PROVIDER
             </div>
-            <span className="font-mono text-[10px] px-2 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">anti-ban: jitter + 1 concurrency</span>
+            <span className="font-mono text-[11px] font-medium px-2.5 py-1 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 shrink-0">anti-ban: jitter + 1 concurrency</span>
           </div>
           <div className="p-5 grid sm:grid-cols-2 gap-4">
             <SelectField
@@ -211,24 +218,24 @@ export default function SettingsPage() {
           <div className="px-5 pb-3 grid sm:grid-cols-2 gap-4">
             <Field k="CRAWLEE_PROXY" label="CRAWLEE_PROXY (optional)" placeholder="http://user:pass@host:port" />
             <div className="flex flex-col justify-end">
-              <p className="font-mono text-[11px] leading-4 text-stone/60">
+              <p className="font-mono text-[12px] leading-5 text-stone">
                 Crawlee uses TikWM cache for TikTok (no direct hits) and adds jitter + Retry-After handling for IG/Meta. Keep concurrency at <span className="text-ink font-semibold">1</span> without a proxy to avoid bans.
               </p>
             </div>
           </div>
-          <div className="px-5 pb-5 flex gap-2">
-            <label className="flex items-center gap-2 font-mono text-[11px] text-stone cursor-pointer">
-              <input type="checkbox" checked={(env.CRAWLEE_WITH_BROWSER || "true") === "true"} onChange={(e) => setEnv({ ...env, CRAWLEE_WITH_BROWSER: e.target.checked ? "true" : "false" })} className="h-3.5 w-3.5 rounded border-stone/30" />
+          <div className="px-5 pb-5 flex gap-2 flex-wrap">
+            <label className="flex items-center gap-2.5 font-mono text-[12px] font-medium text-stone cursor-pointer min-h-[32px]">
+              <input type="checkbox" checked={(env.CRAWLEE_WITH_BROWSER || "true") === "true"} onChange={(e) => setEnv({ ...env, CRAWLEE_WITH_BROWSER: e.target.checked ? "true" : "false" })} className="h-4 w-4 rounded border-stone/30 text-amber focus:ring-amber" />
               Browser fallback (Playwright)
             </label>
-            <span className="font-mono text-[10px] text-stone/40 ml-2 self-center">off = fetch-only, safest for IG</span>
+            <span className="font-mono text-[11px] text-stone/60 ml-2 self-center">off = fetch-only, safest for IG</span>
           </div>
         </div>
 
         {/* API Keys */}
-        <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
-          <div className="h-10 px-5 flex items-center gap-2 border-b border-stone/10 font-mono text-[11px] tracking-wider text-stone/60">
-            <Settings className="h-3.5 w-3.5" /> API KEYS
+        <div className="bg-white rounded-[16px] border border-line shadow-sm overflow-hidden">
+          <div className="min-h-[44px] px-5 flex items-center gap-2 border-b border-line font-mono text-[11px] font-medium tracking-[0.08em] text-stone">
+            <Settings className="h-3.5 w-3.5" aria-hidden="true" /> API KEYS
           </div>
           <div className="p-5 grid sm:grid-cols-2 gap-4">
             <Field k="APIFY_TOKEN" label="APIFY_TOKEN (optional with Crawlee)" placeholder="apify_api_…" />
@@ -238,15 +245,15 @@ export default function SettingsPage() {
             <Field k="GEMINI_MODEL" label="GEMINI_MODEL (optional)" placeholder="gemini-3.5-flash" />
           </div>
           <div className="px-5 pb-4">
-            <p className="font-mono text-[11px] leading-4 text-stone/50">
-              When <span className="text-stone font-medium">SCRAPER_PROVIDER=crawlee</span> you can leave <span className="text-stone font-medium">APIFY_TOKEN</span> empty — local Crawlee is $0 and ban-safe (TikWM cache + jitter). Keep a token only if you want <span className="text-stone font-medium">auto</span> fallback.
+            <p className="font-mono text-[12px] leading-5 text-stone">
+              When <span className="font-semibold text-ink">SCRAPER_PROVIDER=crawlee</span> you can leave <span className="font-semibold text-ink">APIFY_TOKEN</span> empty — local Crawlee is $0 and ban-safe (TikWM cache + jitter). Keep a token only if you want <span className="font-semibold text-ink">auto</span> fallback.
             </p>
           </div>
         </div>
 
         {/* Run settings */}
-        <div className="bg-white rounded-xl border border-stone/10 shadow-sm overflow-hidden">
-          <div className="h-10 px-5 flex items-center gap-2 border-b border-stone/10 font-mono text-[11px] tracking-wider text-stone/60">
+        <div className="bg-white rounded-[16px] border border-line shadow-sm overflow-hidden">
+          <div className="min-h-[44px] px-5 flex items-center gap-2 border-b border-line font-mono text-[11px] font-medium tracking-[0.08em] text-stone">
             RUN DEFAULTS
           </div>
           <div className="p-5 grid sm:grid-cols-3 gap-4">
@@ -294,54 +301,55 @@ export default function SettingsPage() {
           <button
             onClick={save}
             disabled={saving}
-            className="h-10 px-6 rounded-xl bg-amber text-ink font-mono text-[12px] font-semibold flex items-center gap-2 hover:bg-amber/90 disabled:opacity-50 transition-colors"
+            aria-busy={saving}
+            className="h-11 px-6 rounded-full bg-amber text-ink font-mono text-[13px] font-semibold flex items-center gap-2 hover:bg-amber/90 active:scale-[0.98] disabled:opacity-50 transition-all cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ink focus-visible:ring-offset-2"
           >
-            {saving ? <div className="h-4 w-4 border-2 border-ink/30 border-t-ink rounded-full animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
+            {saving ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
             {saving ? "Saving…" : "Save changes"}
           </button>
-          {saved && <span className="font-mono text-[12px] text-emerald-600">✓ Saved</span>}
-          <a href="/api/settings" target="_blank" className="ml-auto font-mono text-[11px] text-stone/60 hover:text-stone transition-colors">View raw .env →</a>
+          {saved && <span className="font-mono text-[13px] font-medium text-emerald-600" role="status" aria-live="polite">✓ Saved</span>}
+          <a href="/api/settings" target="_blank" rel="noreferrer" className="ml-auto font-mono text-[12px] font-medium text-stone hover:text-ink underline decoration-dotted underline-offset-4 transition-colors">View raw .env →</a>
         </div>
 
         {/* Cache + privacy */}
         <div className="grid sm:grid-cols-2 gap-4">
-          <div className="bg-white rounded-xl border border-stone/10 shadow-sm p-5">
-            <div className="flex items-center gap-2 font-mono text-[11px] tracking-wider text-stone/60 mb-3">
-              <Database className="h-3.5 w-3.5" /> ANALYSIS CACHE
+          <div className="bg-white rounded-[16px] border border-line shadow-sm p-5">
+            <div className="flex items-center gap-2 font-mono text-[11px] font-medium tracking-[0.08em] text-stone mb-3">
+              <Database className="h-3.5 w-3.5" aria-hidden="true" /> ANALYSIS CACHE
             </div>
             {cache ? (
               <>
                 <div className="flex items-baseline gap-2">
-                  <div className="font-display text-[32px] font-bold leading-none text-ink">{cache.count}</div>
-                  <span className="font-mono text-[11px] text-stone/60">tapes cached · {(cache.size / 1024).toFixed(1)} KB</span>
+                  <div className="font-display text-[32px] font-bold leading-none text-ink tabular-nums">{cache.count}</div>
+                  <span className="font-mono text-[12px] text-stone">tapes cached · {(cache.size / 1024).toFixed(1)} KB</span>
                 </div>
-                <p className="font-mono text-[10px] text-stone/50 mt-1">
+                <p className="font-mono text-[11px] text-stone/60 mt-1">
                   {cache.mtime ? `Updated ${new Date(cache.mtime).toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' })}` : "Never"}
                 </p>
                 <button
                   onClick={clearCache}
-                  className="mt-4 h-8 px-3 rounded-lg border border-red-200 bg-red-50 font-mono text-[11px] text-red-700 flex items-center gap-1.5 hover:bg-red-100 transition-colors"
+                  className="mt-4 h-9 px-3.5 rounded-full border border-red-200 bg-red-50 font-mono text-[12px] font-medium text-red-700 flex items-center gap-1.5 hover:bg-red-100 active:scale-[0.98] transition-all cursor-pointer"
                 >
-                  <Trash2 className="h-3 w-3" /> Clear cache
+                  <Trash2 className="h-3.5 w-3.5" aria-hidden="true" /> Clear cache
                 </button>
               </>
             ) : (
-              <p className="font-mono text-[12px] text-stone/50">No cache yet.</p>
+              <p className="font-mono text-[13px] text-stone">No cache yet.</p>
             )}
           </div>
 
-          <div className="bg-ink text-white rounded-xl border border-white/10 p-5">
-            <div className="font-mono text-[10px] tracking-wider text-white/40 mb-2">PRIVATE & LOCAL</div>
-            <p className="font-mono text-[12px] leading-5 text-white/80">
-              Keys live in <span className="text-white font-medium">.env</span> (not committed). Reports in <span className="text-white font-medium">output/</span>. Wipe the folder to erase everything.
+          <div className="bg-ink text-white rounded-[16px] border border-white/10 p-5 sm:p-6">
+            <div className="font-mono text-[11px] font-medium tracking-[0.08em] text-white/40 mb-2">PRIVATE & LOCAL</div>
+            <p className="font-mono text-[13px] leading-6 text-white/80">
+              Keys live in <span className="text-white font-semibold">.env</span> (not committed). Reports in <span className="text-white font-semibold">output/</span>. Wipe the folder to erase everything.
             </p>
             <div className="mt-4 flex gap-2">
-              <Link href="/history" className="h-8 px-3 rounded-lg bg-white text-ink font-mono text-[11px] flex items-center">History</Link>
-              <Link href="/" className="h-8 px-3 rounded-lg border border-white/20 font-mono text-[11px] flex items-center">Console →</Link>
+              <Link href="/history" className="h-9 px-4 rounded-full bg-white text-ink font-mono text-[12px] font-medium flex items-center hover:bg-stone-100 active:scale-[0.98] transition-all">History</Link>
+              <Link href="/" className="h-9 px-4 rounded-full border border-white/20 font-mono text-[12px] font-medium flex items-center hover:bg-white/10 active:scale-[0.98] transition-all">Console →</Link>
             </div>
           </div>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
