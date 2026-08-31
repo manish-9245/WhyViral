@@ -4,6 +4,7 @@ import { ReportClient } from "@/components/report/ReportClient";
 import type { ArchiveReport } from "@/lib/types";
 import Link from "next/link";
 import { ArrowLeft, FileJson, Settings } from "lucide-react";
+import { PlatformBadge, PlatformIcon } from "@/components/PlatformIcon";
 
 export const dynamic = "force-dynamic";
 
@@ -61,10 +62,8 @@ export default async function ReportPage({ params }: { params: Promise<{ platfor
           </div>
         </header>
         <div className="max-w-4xl mx-auto px-6 py-16 text-center">
-          <div className="h-16 w-16 rounded-2xl bg-stone-100 mx-auto mb-4 grid place-items-center font-mono text-[11px] text-stone/40 font-bold">
-            {platform.slice(0, 2).toUpperCase()}
-          </div>
-          <h1 className="font-display text-[24px] font-bold tracking-[-0.03em] text-ink capitalize">{platform} wall — empty</h1>
+          <div className="mx-auto mb-4 flex justify-center"><PlatformBadge platform={platform} size={64} /></div>
+          <h1 className="font-display text-[24px] font-bold tracking-[-0.03em] text-ink capitalize flex items-center justify-center gap-2"><PlatformIcon platform={platform} size={18} />{platform} wall — empty</h1>
           <p className="mt-2 font-mono text-[12px] text-stone/60">No report found for this platform. Run a search from the console.</p>
           <Link href="/" className="mt-6 inline-flex h-10 items-center gap-2 rounded-lg bg-amber text-ink font-mono text-[12px] font-semibold px-5 hover:bg-amber/90 transition-colors">
             ← Go to console
@@ -86,11 +85,11 @@ export default async function ReportPage({ params }: { params: Promise<{ platfor
       <header className="sticky top-0 z-40 bg-white border-b border-stone/10 shadow-sm">
         <div className="max-w-4xl mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-8 w-8 rounded-lg bg-ink grid place-items-center text-amber text-[10px] font-bold font-mono">WV</div>
-            <span className="font-mono text-[11px] font-semibold tracking-[0.1em] text-ink">WHYVIRAL</span>
-            <span className="font-mono text-[11px] text-stone/40 hidden sm:block">/</span>
-            <span className="font-mono text-[11px] text-stone/60 capitalize hidden sm:block">{platform}</span>
-          </div>
+              <div className="h-8 w-8 rounded-lg bg-ink grid place-items-center text-amber text-[10px] font-bold font-mono">WV</div>
+              <span className="font-mono text-[11px] font-semibold tracking-[0.1em] text-ink">WHYVIRAL</span>
+              <span className="font-mono text-[11px] text-stone/40 hidden sm:block">/</span>
+              <span className="font-mono text-[11px] text-stone/60 capitalize hidden sm:block flex items-center gap-1.5"><PlatformIcon platform={platform} size={12} />{platform}</span>
+            </div>
           <nav className="flex items-center gap-1">
             <Link href="/" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50">Console</Link>
             <Link href="/history" className="h-8 px-3 flex items-center rounded-lg font-mono text-[11px] text-stone hover:bg-stone-50">History</Link>

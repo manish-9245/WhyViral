@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Archive, ExternalLink, Settings } from "lucide-react";
+import { PlatformBadge, PlatformIcon } from "@/components/PlatformIcon";
 
 type Run = { file: string; platform: string; keyword: string; videos: number; date: string; rankBy: string };
 
@@ -66,15 +67,13 @@ export default function HistoryPage() {
             {runs.map((r) => (
               <Link key={r.file} href={`/report/${r.platform}`}
                 className="flex items-center gap-4 rounded-xl border border-stone/10 bg-white px-5 py-4 hover:border-stone/20 hover:shadow-sm transition-all group">
-                <div className="h-11 w-11 rounded-xl bg-ink text-amber grid place-items-center font-mono text-[12px] font-bold shrink-0">
-                  {r.platform.slice(0, 2).toUpperCase()}
-                </div>
+                <PlatformBadge platform={r.platform} size={44} />
                 <div className="flex-1 min-w-0">
                   <div className="font-mono text-[13px] font-semibold text-ink truncate">{r.keyword}</div>
                   <div className="font-mono text-[11px] text-stone/50 mt-0.5">{r.videos} tapes · {r.date}</div>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className="font-mono text-[10px] text-stone/40 border border-stone/10 rounded px-2 py-1 capitalize">{r.platform}</span>
+                  <span className="font-mono text-[10px] text-stone/60 border border-stone/10 rounded-full px-2.5 py-1 capitalize flex items-center gap-1.5"><PlatformIcon platform={r.platform} size={11} />{r.platform}</span>
                   <ExternalLink className="h-4 w-4 text-stone/30 group-hover:text-amber-600 transition-colors" />
                 </div>
               </Link>

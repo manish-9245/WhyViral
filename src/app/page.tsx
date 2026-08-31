@@ -2,6 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Loader2, Play, CheckCircle2, AlertTriangle, SlidersHorizontal, ExternalLink, RefreshCw, X, ChevronDown, ChevronUp, Archive, Settings } from "lucide-react";
+import { PlatformIcon, PlatformBadge } from "@/components/PlatformIcon";
 
 type Stage = "scrape" | "prescreen" | "watch" | "deep" | "synth";
 type StageStatus = "pending" | "running" | "done" | "failed" | "skipped";
@@ -197,19 +198,22 @@ export default function HomePage() {
 
             {/* Platform */}
             <div>
-              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider">PLATFORM — all 9 + all</div>
-              <div className="flex flex-wrap gap-1 max-w-[420px]">
+              <div className="font-mono text-[10px] text-stone/60 mb-1.5 tracking-wider">PLATFORM — 9 + all</div>
+              <div className="flex flex-wrap gap-1.5 max-w-[460px]">
                 {([
-                  ["tiktok","TikTok"],["instagram","IG"],["meta","Meta"],
-                  ["youtube","YT Shorts"],["twitter","X"],["pinterest","Pin"],
-                  ["reddit","Reddit"],["linkedin","LI"],["snapchat","Snap"],
-                  ["all","All ✨"],
+                  ["tiktok","TikTok"],["instagram","Instagram"],["meta","Meta"],
+                  ["youtube","YouTube"],["twitter","X"],["pinterest","Pinterest"],
+                  ["reddit","Reddit"],["linkedin","LinkedIn"],["snapchat","Snapchat"],
+                  ["all","All"],
                 ] as const).map(([val, label]) => (
                   <button
                     key={val}
                     onClick={() => setPlatform(val as PlatformId)}
-                    className={`h-7 px-2.5 rounded-full border font-mono text-[11px] transition-colors ${platform === val ? "bg-ink text-white border-ink" : "bg-white text-stone border-stone/20 hover:bg-stone-50"}`}
-                  >{label}</button>
+                    className={`h-7 px-2.5 rounded-full border font-mono text-[11px] transition-colors flex items-center gap-1.5 ${platform === val ? "bg-ink text-white border-ink" : "bg-white text-stone border-stone/20 hover:bg-stone-50"}`}
+                  >
+                    <PlatformIcon platform={val} size={12} />
+                    {label}
+                  </button>
                 ))}
               </div>
             </div>
@@ -448,8 +452,8 @@ export default function HomePage() {
               {runCosts.length > 0 ? (
                 <div className="space-y-1.5">
                   {runCosts.map((c) => (
-                    <div key={c.platform} className="font-mono text-[11px] flex justify-between">
-                      <span className="text-stone capitalize">{c.platform}</span>
+                    <div key={c.platform} className="font-mono text-[11px] flex justify-between items-center">
+                      <span className="text-stone capitalize flex items-center gap-1.5"><PlatformIcon platform={c.platform} size={12} />{c.platform}</span>
                       <span className="font-medium">₹{c.tier1Inr + c.tier2Inr + c.synthInr} + ${c.apifyUsd.toFixed(2)}</span>
                     </div>
                   ))}
@@ -488,9 +492,7 @@ export default function HomePage() {
                   runs.slice(0, 5).map((r) => (
                     <Link key={r.file} href={`/report/${r.platform}`}
                       className="flex items-center gap-3 px-4 py-3 hover:bg-paper transition-colors group">
-                      <div className="h-8 w-8 rounded-lg bg-ink text-amber grid place-items-center font-mono text-[10px] font-bold shrink-0">
-                        {r.platform.slice(0, 2).toUpperCase()}
-                      </div>
+                      <PlatformBadge platform={r.platform} size={32} />
                       <div className="flex-1 min-w-0">
                         <div className="font-mono text-[11px] font-medium truncate text-stone group-hover:text-ink">{r.keyword}</div>
                         <div className="font-mono text-[10px] text-stone/50">{r.videos} tapes · {r.date}</div>
