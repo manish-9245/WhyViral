@@ -122,9 +122,9 @@ function extractMediasFromGeneric(json: Record<string, unknown>): Record<string,
     if (!obj || typeof obj !== "object") return;
     if (Array.isArray(obj)) { for (const v of obj) walk(v); return; }
     const rec = obj as Record<string, unknown>;
-    if (rec.shortcode && (rec.is_video || rec.video_url || rec.product_type)) {
-      out.push(igJsonToReelRaw(rec));
-      return;
+    if (rec.shortcode) {
+      const hasCaption = Boolean(rec.edge_media_to_caption || rec.caption || rec.text);
+      if (hasCaption || rec.is_video || rec.video_url || rec.product_type) { out.push(igJsonToReelRaw(rec)); return; }
     }
     for (const v of Object.values(rec)) walk(v);
   };
@@ -153,9 +153,7 @@ async function fetchInstagramSearchReels(query: string, maxPages: number): Promi
     if (medias) {
       for (const m of medias) {
         const media = (m.media as Record<string, unknown>) || m;
-        // filter to video/reel-ish types
-        const type = String(media.product_type || media.media_type || "").toLowerCase();
-        if (!type.includes("clips") && !type.includes("video") && !type.includes("reel") && !(media.video_url || (media as Record<string,unknown>).video_versions)) continue;
+        // Keep both video + image/text — both analyzable (text via caption/LLM)
         results.push(instagramMediaToSearchShape(media));
       }
     }
@@ -215,8 +213,8 @@ async function fetchInstagramUserReels(username: string, limit: number): Promise
       const edge = user?.edge_owner_to_timeline_media as Record<string, unknown> | undefined;
       if (edge?.edges) {
         const items = (edge.edges as Record<string, unknown>[]).map((e) => igJsonToReelRaw(((e.node as Record<string, unknown>) || e) as Record<string, unknown>));
-        // Filter to reel/video types and limit
-        return items.filter((it) => String(it.type || it.productType || "").toLowerCase().includes("video") || String(it.productType).includes("clips") || !!it.videoUrl).slice(0, limit);
+        // Keep both video + image/text (all analyzable) — slice to limit
+        return items.slice(0, limit);
       }
       const medias = extractMediasFromGeneric(json);
       if (medias.length) return medias.slice(0, limit);
@@ -279,7 +277,11 @@ async function crawlInstagramWithPlaywright(actorId: string, input: Record<strin
       if (!obj || typeof obj !== "object") return;
       if (Array.isArray(obj)) { for (const v of obj) walk(v); return; }
       const rec = obj as Record<string, unknown>;
-      if (rec.shortcode && (rec.is_video || rec.video_url)) { out.push(igJsonToReelRaw(rec)); return; }
+      // Keep both video + image/text posts — all have shortcode + caption
+      if (rec.shortcode) {
+        const hasCaption = Boolean(rec.edge_media_to_caption || rec.caption || rec.text);
+        if (hasCaption || rec.is_video || rec.video_url || rec.product_type) { out.push(igJsonToReelRaw(rec)); return; }
+      }
       for (const v of Object.values(rec)) walk(v);
     };
     walk(json);

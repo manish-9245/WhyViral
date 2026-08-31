@@ -110,6 +110,26 @@ function buildPrompt(tier: number, niche: string): string {
   return parts.join("\n");
 }
 
+const TEXT_RUBRIC_INTRO = `You are a short-form content strategist. Analyze this social media POST (text + image/caption + metadata) the way a strategist studying what makes content win would. There is NO video file — analyze based on caption, author, URL, and any image description provided. Be concrete and specific to THIS post. If something is not present, say "none". Fill every field.
+
+Adapt the video taxonomy to text/image posts:
+- hook.visual: concrete description of the TEXT hook (first line) or image hook if an image exists (e.g. "bold text overlay 'No one is talking about this' on plain background", "carousel before/after face split", "creator photo holding product to lens"). If text-only, describe the opening line's style.
+- hook.spoken: the EXACT words of the TEXT hook (first 1-2 sentences of caption). If caption is short, use it verbatim. If no caption, say "none".
+- hook.on_screen_text: the EXACT text shown ON IMAGE as overlay if any (keep caps/emojis). If no image, say "none".
+- format: choose closest from: "before-after", "problem-solution", "listicle", "tutorial", "yap", "product-demo", "transformation", "comparison", "react-stitch", "storytime", "education", "myth-bust", "grwm-routine", "testimonial", "unboxing", "text-thread", "carousel", "meme". Use "text-thread" for long text posts, "carousel" for swipe image sets.
+- visual_style: e.g. "text-on-screen", "carousel", "single image", "text-thread", "meme", "infographic", "talking head" (if author photo present).
+- Other fields (tone, pacing, angle, persuasion_tactics, target_audience, etc.) apply as for video — judge by the TEXT/CAPTION itself.`;
+
+function buildTextPrompt(tier: number, niche: string, video: Video): string {
+  const parts = [TEXT_RUBRIC_INTRO];
+  if (niche) parts.push(nicheRelevanceBlock(niche));
+  // Deep script for text posts: still useful but adapted
+  if (tier === 2) parts.push(RUBRIC_DEEP.replace("ENTIRE video", "ENTIRE post/caption").replace("spoken line", "sentence/line"));
+  parts.push(RUBRIC_TAIL);
+  parts.push(`\nPOST TO ANALYZE:\nPlatform: ${video.platform}\nAuthor: ${video.author}\nURL: ${video.url}\nCaption:\n${(video.caption || "").slice(0, 4000)}\nFollowers: ${video.followers}\nLikes: ${video.likes}  Comments: ${video.comments}  Shares: ${video.shares}\nImage URL: ${(video as unknown as { imageUrl?: string }).imageUrl || "none"}\nVideo URL: ${video.videoUrl || "none (text/image post)"}`);
+  return parts.join("\n\n");
+}
+
 const TIER1_PROPERTIES = {
   hook: {
     type: Type.OBJECT,
@@ -264,6 +284,29 @@ export async function analyzeVideo(
   model: string,
   { tier = 1, niche = "" }: { tier?: number; niche?: string } = {}
 ): Promise<Analysis> {
+  // Text/image posts (no video) — analyze caption + metadata directly via LLM (no video upload)
+  const contentType = (video as unknown as { contentType?: string }).contentType || (video.videoUrl ? "video" : video.caption ? "text" : "video");
+  const isTextPost = !video.videoUrl && (contentType === "text" || contentType === "image" || Boolean(video.caption) || ["linkedin", "reddit", "twitter", "pinterest", "snapchat"].includes(video.platform as string));
+  // For text/image posts with caption, bypass video download and do text analysis
+  if (isTextPost && video.caption) {
+    // If it has caption but no videoUrl, still try to treat as text unless it's explicitly a video platform with missing video (tiktok/youtube/instagram video should attempt download first)
+    const mustBeVideo = ["tiktok", "youtube"].includes(video.platform as string) || (video.platform === "instagram" && contentType === "video");
+    if (!mustBeVideo) {
+      console.log(`   📝 Text/image post @${video.author} (${video.platform}/${contentType}) — analyzing caption directly (no video download)`);
+      const prompt = buildTextPrompt(tier, niche, video);
+      const res = await generateWithRetry(ai, {
+        model,
+        contents: prompt,
+        config: { responseMimeType: "application/json", responseSchema: tier === 2 ? TIER2_SCHEMA : TIER1_SCHEMA },
+      }) as { text: string };
+      const analysis = JSON.parse(res.text) as Analysis;
+      (analysis as unknown as Record<string,string>).analysis_tier = String(tier);
+      if (niche) (analysis as unknown as Record<string,string>).niche_for = niche;
+      (analysis as unknown as Record<string,string>).content_type = contentType;
+      return analysis;
+    }
+  }
+
   mkdirSync("tmp", { recursive: true });
   const localPath = `tmp/${video.id || "video"}.mp4`;
   let bytes: number = 0;
@@ -272,6 +315,21 @@ export async function analyzeVideo(
     try { bytes = await downloadVideo(video.videoUrl, localPath); downloaded = true; } catch { /* fallback */ }
   }
   if (!downloaded) {
+    // If text post without videoUrl but we reached here (mustBeVideo case), still try text fallback before throwing
+    if (video.caption && !video.videoUrl) {
+      console.log(`   📝 Fallback text analysis for @${video.author} (${video.platform}) — no videoUrl`);
+      const prompt = buildTextPrompt(tier, niche, video);
+      const res = await generateWithRetry(ai, {
+        model,
+        contents: prompt,
+        config: { responseMimeType: "application/json", responseSchema: tier === 2 ? TIER2_SCHEMA : TIER1_SCHEMA },
+      }) as { text: string };
+      const analysis = JSON.parse(res.text) as Analysis;
+      (analysis as unknown as Record<string,string>).analysis_tier = String(tier);
+      if (niche) (analysis as unknown as Record<string,string>).niche_for = niche;
+      (analysis as unknown as Record<string,string>).content_type = contentType;
+      return analysis;
+    }
     // Platform-aware fallback — YouTube via Piped, TikTok via shop resolver, others give clear message
     if (/youtu\.?be/i.test(video.url || "") || video.platform === "youtube") {
       console.log("   normal download unavailable, trying YouTube Piped fallback...");

@@ -42,9 +42,10 @@ async function getGuestToken(): Promise<string> {
 async function fetchViaGuestSearch(keyword: string, count: number): Promise<Record<string, unknown>[]> {
   const token = await getGuestToken();
   await sleep(jitter(900, 600));
-  const q = `${keyword} filter:media filter:videos -filter:retweets`;
+  // Support both video + text — filter:videos would drop text posts that also go viral
+  const q = `${keyword} -filter:retweets`;
   const params = new URLSearchParams({
-    q, count: String(Math.min(count, 20)), query_source: "typed_query", result_filter: "media",
+    q, count: String(Math.min(count, 20)), query_source: "typed_query",
   });
   const res = await fetch(`${ADAPTIVE_SEARCH}?${params}`, {
     headers: {
@@ -68,14 +69,17 @@ function extractAdaptiveTweets(j: Record<string, unknown>): Record<string, unkno
   if (!tweets) return [];
   for (const t of Object.values(tweets)) {
     const extended = (t.extended_entities as Record<string, unknown>)?.media as Record<string, unknown>[] | undefined;
-    const hasVideo = extended?.some((m) => m.type === "video" || m.type === "animated_gif");
-    if (!hasVideo) continue;
+    const hasVideo = extended?.some((m) => m.type === "video" || m.type === "animated_gif") ?? false;
+    const hasImage = extended?.some((m) => m.type === "photo") ?? false;
+    const isText = !extended || extended.length === 0;
+    // Include video, image, and text — all can be analyzed (text via caption/LLM, media via video/image)
     const userId = t.user_id_str as string;
     const users = (j.globalObjects as Record<string, unknown>)?.users as Record<string, Record<string, unknown>> | undefined;
     const user = users?.[userId] || {};
     const media = extended?.[0] as Record<string, unknown> | undefined;
     const variants = (media?.video_info as Record<string, unknown>)?.variants as { url: string; bitrate?: number; content_type: string }[] | undefined;
-    const best = variants?.filter((v) => v.content_type === "video/mp4").sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0];
+    const best = hasVideo ? variants?.filter((v) => v.content_type === "video/mp4").sort((a, b) => (b.bitrate || 0) - (a.bitrate || 0))[0] : undefined;
+    const imageUrl = hasImage ? (media?.media_url_https as string) || (media?.media_url as string) || "" : "";
     out.push({
       id: String(t.id_str || t.id || ""),
       caption: (t.full_text as string) || (t.text as string) || "",
@@ -89,7 +93,9 @@ function extractAdaptiveTweets(j: Record<string, unknown>): Record<string, unkno
       createdAt: (t.created_at as string) || null,
       url: `https://x.com/${user.screen_name || "i"}/status/${t.id_str}`,
       videoUrl: best?.url || "",
-      hasVideo: true, platform: "twitter",
+      imageUrl: imageUrl || "",
+      hasVideo, hasImage, isText, contentType: hasVideo ? "video" : hasImage ? "image" : "text",
+      platform: "twitter",
     });
   }
   return out;
@@ -97,16 +103,16 @@ function extractAdaptiveTweets(j: Record<string, unknown>): Record<string, unkno
 
 async function fetchViaNitter(keyword: string, count: number): Promise<Record<string, unknown>[]> {
   await sleep(jitter(800, 700));
-  // Nitter instances rotate; try list
+  // Nitter instances rotate; try list — fetch both video + text (no f=videos filter so text included)
   const instances = ["https://nitter.net", "https://nitter.privacydev.net", "https://xcancel.com"];
   for (const base of instances) {
     try {
-      const url = `${base}/search?f=videos&q=${encodeURIComponent(keyword)}`;
+      const url = `${base}/search?q=${encodeURIComponent(keyword)}`;
       const res = await fetch(url, { headers: { "User-Agent": randomUA(), "Accept": "text/html" }, signal: AbortSignal.timeout(12000) });
       if (!res.ok) continue;
       const html = await res.text();
       const items = parseNitterHTML(html);
-      if (items.length) { console.log(`   🕷️  Crawlee X (Nitter ${base}) "${keyword}" → ${items.length}`); return items.slice(0, count); }
+      if (items.length) { console.log(`   🕷️  Crawlee X (Nitter ${base}) "${keyword}" → ${items.length} (text+video)`); return items.slice(0, count); }
     } catch { /* try next */ }
     await sleep(600);
   }
@@ -118,9 +124,13 @@ function parseNitterHTML(html: string): Record<string, unknown>[] {
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) && out.length < 30) {
     const username = m[1], id = m[2];
-    const video = html.slice(m.index, m.index + 4000).includes("video") || html.slice(m.index, m.index + 4000).includes("gif");
-    if (!video) continue;
-    out.push({ id, caption: "", username, url: `https://x.com/${username}/status/${id}`, videoUrl: "", platform: "twitter", hasVideo: true, likeCount: 0, viewCount: 0 });
+    const snippet = html.slice(m.index, m.index + 4000);
+    const hasVideo = snippet.includes("video") || snippet.includes("gif");
+    const hasImage = snippet.includes("still-image") || snippet.includes("<img");
+    // Include both text + media — text-only tweets are analyzable via caption
+    const captionMatch = snippet.match(/<div class="tweet-content[^"]*">([\s\S]*?)<\/div>/);
+    const caption = captionMatch ? captionMatch[1].replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim().slice(0, 280) : "";
+    out.push({ id, caption, username, url: `https://x.com/${username}/status/${id}`, videoUrl: "", imageUrl: "", platform: "twitter", hasVideo, hasImage, isText: !hasVideo && !hasImage, contentType: hasVideo ? "video" : hasImage ? "image" : "text", likeCount: 0, viewCount: 0 });
   }
   return out;
 }
@@ -149,7 +159,7 @@ export async function runTwitterCrawlee(_actorId: string, input: Record<string, 
     all.push(...items);
     await sleep(jitter(1100, 700));
   }
-  if (!all.length) throw new Error(`X/Twitter: no videos for "${keywords.join(", ")}" — try different keywords or check Nitter availability`);
+  if (!all.length) throw new Error(`X/Twitter: no posts for "${keywords.join(", ")}" — try different keywords or check Nitter availability`);
   return all.slice(0, count * Math.max(1, keywords.length)).map((it) => ({
     ...it, platform: "twitter", id: String(it.id), videoId: String(it.id),
     title: (it.caption as string) || "", viewCount: Number(it.viewCount || it.likeCount || 0),

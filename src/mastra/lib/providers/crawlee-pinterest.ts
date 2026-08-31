@@ -9,7 +9,7 @@
 //   3) Playwright gated fallback.
 //
 // ANTI-BAN: Pinterest is lenient for unauthenticated GETs. We use ONE GET per keyword,
-// 900–1500ms jitter, UA rotation, concurrency=1. `pins` carry view counts only if video; we filter to `is_video`.
+// 900–1500ms jitter, UA rotation, concurrency=1. Pins include BOTH image + video (text+video analyzable).
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const jitter = (b: number, s: number) => b + Math.floor(Math.random() * s);
@@ -17,41 +17,64 @@ const randomUA = () => "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWeb
 
 async function fetchPinterestSearch(keyword: string, count: number): Promise<Record<string, unknown>[]> {
   await sleep(jitter(900, 600));
-  // Try HTML + initialReduxState path (most reliable unauthenticated)
-  const url = `https://www.pinterest.com/search/videos/${encodeURIComponent(keyword)}/`;
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": randomUA(),
-      "Accept": "text/html,application/xhtml+xml",
-      "Accept-Language": "en-US,en;q=0.9",
-      "Referer": "https://www.pinterest.com/",
-    },
-    signal: AbortSignal.timeout(15000),
-  });
-  if (res.status === 429) throw new Error(`Pinterest 429 — retry after ${res.headers.get("retry-after") || "60s"}`);
-  if (!res.ok) throw new Error(`Pinterest HTTP ${res.status}`);
-  const html = await res.text();
-  // Extract JSON blobs
-  const m = html.match(/id="initial-state"[^>]*>(.+?)<\/script>/) || html.match(/window\.__initialReduxState__\s*=\s*(\{.+?\});<\/script>/s) || html.match(/"resourceResponses":\s*(\[.+?\])/s);
-  let data: Record<string, unknown> | null = null;
-  if (m) { try { data = JSON.parse(m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&')); } catch { /* ignore */ } }
-  if (!data) {
-    // Try __PWS_DATA__
-    const pws = html.match(/id="__PWS_DATA__"[^>]*>(.+?)<\/script>/);
-    if (pws) { try { data = JSON.parse(pws[1]); } catch { /* ignore */ } }
+  // Support both text+video: first try pins (all), fallback to videos-specific
+  const urls = [
+    `https://www.pinterest.com/search/pins/${encodeURIComponent(keyword)}/`,
+    `https://www.pinterest.com/search/videos/${encodeURIComponent(keyword)}/`,
+  ];
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          "User-Agent": randomUA(),
+          "Accept": "text/html,application/xhtml+xml",
+          "Accept-Language": "en-US,en;q=0.9",
+          "Referer": "https://www.pinterest.com/",
+        },
+        signal: AbortSignal.timeout(15000),
+      });
+      if (res.status === 429) throw new Error(`Pinterest 429 — retry after ${res.headers.get("retry-after") || "60s"}`);
+      if (!res.ok) continue;
+      const html = await res.text();
+      const m = html.match(/id="initial-state"[^>]*>(.+?)<\/script>/) || html.match(/window\.__initialReduxState__\s*=\s*(\{.+?\});<\/script>/s) || html.match(/"resourceResponses":\s*(\[.+?\])/s);
+      let data: Record<string, unknown> | null = null;
+      if (m) { try { data = JSON.parse(m[1].replace(/&quot;/g, '"').replace(/&amp;/g, '&')); } catch { /* ignore */ } }
+      if (!data) {
+        const pws = html.match(/id="__PWS_DATA__"[^>]*>(.+?)<\/script>/);
+        if (pws) { try { data = JSON.parse(pws[1]); } catch { /* ignore */ } }
+      }
+      if (!data) {
+        const pins = parsePinterestPinsFromHTML(html);
+        if (pins.length) return pins.slice(0, count);
+        continue;
+      }
+      const pins = extractPins(data);
+      if (pins.length) return pins.slice(0, count);
+    } catch { /* try next URL */ }
   }
-  if (!data) return parsePinterestPinsFromHTML(html).slice(0, count);
-  return extractPins(data).slice(0, count);
+  // Last resort: parse any pins from first URL's HTML
+  return [];
 }
 
 function parsePinterestPinsFromHTML(html: string): Record<string, unknown>[] {
   const out: Record<string, unknown>[] = [];
-  // Look for pin JSON objects inline
-  const re = /"id"\s*:\s*"(\d+)"[^}]*"is_video"\s*:\s*true[^}]*"description"\s*:\s*"([^"]*?)"/g;
+  // Capture both video + image pins — text+video analyzable
+  const re = /"id"\s*:\s*"(\d+)"[^}]{0,300}"description"\s*:\s*"([^"]*?)"/g;
   let m: RegExpExecArray | null;
   while ((m = re.exec(html)) && out.length < 50) {
     const id = m[1], desc = m[2];
-    out.push({ id, videoId: id, title: desc, caption: desc, url: `https://www.pinterest.com/pin/${id}/`, videoUrl: "", viewCount: 0, platform: "pinterest", is_video: true });
+    // Filter obvious non-pin noise (short ids)
+    if (id.length < 5) continue;
+    const isVideo = m[0].includes('"is_video":true') || m[0].includes('"videos"');
+    out.push({ id, videoId: id, title: desc, caption: desc, url: `https://www.pinterest.com/pin/${id}/`, videoUrl: "", imageUrl: "", viewCount: 0, platform: "pinterest", contentType: isVideo ? "video" : "image", is_video: isVideo });
+  }
+  // Fallback: extract any pin id + title pairs
+  if (!out.length) {
+    const alt = /"id"\s*:\s*"(\d+)"[^}]{0,300}"grid_title"\s*:\s*"([^"]*?)"/g;
+    while ((m = alt.exec(html)) && out.length < 50) {
+      const id = m[1], title = m[2];
+      out.push({ id, videoId: id, title, caption: title, url: `https://www.pinterest.com/pin/${id}/`, videoUrl: "", platform: "pinterest", contentType: "image" });
+    }
   }
   return out;
 }
@@ -62,12 +85,18 @@ function extractPins(data: Record<string, unknown>): Record<string, unknown>[] {
     if (!obj || typeof obj !== "object") return;
     if (Array.isArray(obj)) { for (const v of obj) walk(v); return; }
     const rec = obj as Record<string, unknown>;
-    if (rec.id && (rec.is_video === true || rec.videos || rec.video)) {
+    // Accept any pin with id + description/title — both image (text) and video analyzable
+    const hasId = rec.id && String(rec.id).length > 4;
+    const hasDesc = rec.description || rec.title || rec.grid_title || rec.gridTitle;
+    if (hasId && hasDesc) {
       const id = String(rec.id);
-      const desc = (rec.description as string) || (rec.title as string) || (rec.grid_title as string) || "";
+      const desc = (rec.description as string) || (rec.title as string) || (rec.grid_title as string) || (rec.gridTitle as string) || "";
       const videos = rec.videos as Record<string, unknown> | undefined;
       const videoUrl = (videos?.video_list as Record<string, Record<string, string>>)?.V_720P?.url || (videos as Record<string,string>)?.url || "";
-      out.push({ id, videoId: id, title: desc, caption: desc, url: `https://www.pinterest.com/pin/${id}/`, videoUrl, viewCount: Number(rec.view_count || 0), platform: "pinterest" });
+      const images = rec.images as Record<string, unknown> | undefined;
+      const imageUrl = (images?.["736x"] as Record<string,string>)?.url || (rec.image as string) || "";
+      const isVideo = rec.is_video === true || Boolean(rec.videos || rec.video);
+      out.push({ id, videoId: id, title: desc, caption: desc, url: `https://www.pinterest.com/pin/${id}/`, videoUrl, imageUrl, viewCount: Number(rec.view_count || 0), platform: "pinterest", contentType: isVideo ? "video" : "image" });
       return;
     }
     for (const v of Object.values(rec)) walk(v);
@@ -91,6 +120,6 @@ export async function runPinterestCrawlee(_actorId: string, input: Record<string
     all.push(...items);
     await sleep(jitter(900, 800));
   }
-  if (!all.length) throw new Error(`Pinterest: no videos for "${keywords.join(", ")}"`);
+  if (!all.length) throw new Error(`Pinterest: no pins for "${keywords.join(", ")}"`);
   return all.slice(0, count * Math.max(1, keywords.length));
 }
